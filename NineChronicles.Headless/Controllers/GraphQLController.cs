@@ -118,15 +118,6 @@ namespace NineChronicles.Headless.Controllers
 
             var privateKey = new PrivateKey(ByteUtil.ParseHex(request.PrivateKeyString));
             StandaloneContext.NineChroniclesNodeService.MinerPrivateKey = privateKey;
-            // FIXME: move sign in into login query. 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, privateKey.ToAddress().ToHex()),
-                new Claim(ClaimTypes.Role, "User"),
-            };
-            var claimsIdentity = new ClaimsIdentity(claims, "Login");
-            _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-            _httpContextAccessor.HttpContext.Session.SetPrivateKey(privateKey);
             var msg = $"Private key set ({StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress()}).";
             Log.Information("SetPrivateKey: {Msg}", msg);
             return Ok(msg);
@@ -243,60 +234,61 @@ namespace NineChronicles.Headless.Controllers
                 .Where(NeedsRefillNotification)
                 .ToList();
 
-            if (avatarStatesToSendNotification.Any())
-            {
-                var notification = new Notification(NotificationEnum.Refill);
-                StandaloneContext.NotificationSubject.OnNext(notification);
-            }
-
             foreach (var avatarState in avatarStatesToSendNotification)
             {
                 Log.Debug(
                     "Record notification for {AvatarAddress}",
                     avatarState.address.ToHex());
+                var notification = new Notification(NotificationEnum.Refill, avatarState.address);
+                StandaloneContext.NotificationSubject.OnNext(notification);
                 NotificationRecords[avatarState.address] = avatarState.dailyRewardReceivedIndex;
             }
         }
 
         private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
         {
-            if (StandaloneContext.NineChroniclesNodeService.MinerPrivateKey is null)
+            List<Tuple<Guid, ProtectedPrivateKey>> tuples =
+                StandaloneContext.KeyStore.List().ToList();
+            if (!tuples.Any())
             {
-                Log.Information("PrivateKey is not set. please call SetPrivateKey() first.");
                 return;
             }
-            Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
-            if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
+
+            var playerAddresses = tuples.Select(tuple => tuple.Item2.Address).ToHashSet();
+
+            if (playerAddresses.Contains(eval.Signer))
             {
-                if (eval.Signer == address)
+                var type = NotificationEnum.Refill;
+                var msg = string.Empty;
+                switch (eval.Action)
                 {
-                    var type = NotificationEnum.Refill;
-                    var msg = string.Empty;
-                    switch (eval.Action)
-                    {
-                        case HackAndSlash has:
-                            type = NotificationEnum.HAS;
-                            msg = has.stageId.ToString(CultureInfo.InvariantCulture);
-                            break;
-                        case CombinationConsumable _:
-                            type = NotificationEnum.CombinationConsumable;
-                            break;
-                        case CombinationEquipment _:
-                            type = NotificationEnum.CombinationEquipment;
-                            break;
-                        case Buy _:
-                            type = NotificationEnum.Buyer;
-                            break;
-                    }
-                    Log.Information("NotifyAction: Type: {Type} MSG: {Msg}", type, msg);
-                    var notification = new Notification(type, msg);
-                    StandaloneContext.NotificationSubject.OnNext(notification);
+                    case HackAndSlash has:
+                        type = NotificationEnum.HAS;
+                        msg = has.stageId.ToString(CultureInfo.InvariantCulture);
+                        break;
+                    case CombinationConsumable _:
+                        type = NotificationEnum.CombinationConsumable;
+                        break;
+                    case CombinationEquipment _:
+                        type = NotificationEnum.CombinationEquipment;
+                        break;
+                    case Buy _:
+                        type = NotificationEnum.Buyer;
+                        break;
                 }
-                else
+                Log.Information("NotifyAction: Type: {Type} MSG: {Msg}", type, msg);
+                var notification = new Notification(type, eval.Signer, msg);
+                StandaloneContext.NotificationSubject.OnNext(notification);
+            }
+
+            playerAddresses.IntersectWith(eval.OutputStates.UpdatedAddresses);
+            if (playerAddresses.Any() && eval.Action is Buy4 buy)
+            {
+                foreach (Address address in playerAddresses)
                 {
-                    if (eval.Action is Buy4 buy && buy.sellerAgentAddress == address)
+                    if (buy.sellerAgentAddress == address)
                     {
-                        var notification = new Notification(NotificationEnum.Seller);
+                        var notification = new Notification(NotificationEnum.Seller, address);
                         StandaloneContext.NotificationSubject.OnNext(notification);
                     }
                 }

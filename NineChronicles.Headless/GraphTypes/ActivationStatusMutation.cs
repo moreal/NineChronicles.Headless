@@ -5,6 +5,7 @@ using GraphQL.Types;
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Crypto;
+using Microsoft.AspNetCore.Http;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -15,8 +16,12 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActivationStatusMutation : ObjectGraphType<NineChroniclesNodeService>
     {
-        public ActivationStatusMutation()
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public ActivationStatusMutation(IHttpContextAccessor httpContextAccessor)
         {
+            _httpContextAccessor = httpContextAccessor;
+
             Field<NonNullGraphType<BooleanGraphType>>("activateAccount",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
@@ -31,7 +36,7 @@ namespace NineChronicles.Headless.GraphTypes
                             context.GetArgument<string>("encodedActivationKey");
                         NineChroniclesNodeService service = context.Source;
                         // FIXME: Private key may not exists at this moment.
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        PrivateKey privateKey = _httpContextAccessor.HttpContext.Session.GetPrivateKey();
                         ActivationKey activationKey = ActivationKey.Decode(encodedActivationKey);
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         IValue state = blockChain.GetState(activationKey.PendingAddress);

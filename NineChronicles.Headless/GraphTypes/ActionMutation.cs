@@ -11,16 +11,23 @@ using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using GraphQL.Server.Authorization.AspNetCore;
 using Libplanet.Explorer.GraphTypes;
 using Libplanet.Tx;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class ActionMutation : ObjectGraphType<NineChroniclesNodeService>
     {
-        public ActionMutation()
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public ActionMutation(IHttpContextAccessor httpContextAccessor)
         {
+            _httpContextAccessor = httpContextAccessor;
+
             Field<NonNullGraphType<TxIdType>>("createAvatar",
                 description: "Create new avatar.",
                 arguments: new QueryArguments(
@@ -60,7 +67,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        PrivateKey privateKey = _httpContextAccessor.HttpContext.Session.GetPrivateKey();
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         var avatarName = context.GetArgument<string>("avatarName");
                         var avatarIndex = context.GetArgument<int>("avatarIndex");
@@ -260,7 +267,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privatekey = service.MinerPrivateKey;
+                        PrivateKey privatekey = _httpContextAccessor.HttpContext.Session.GetPrivateKey();
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Guid itemId = context.GetArgument<Guid>("itemId");
                         Guid materialId = context.GetArgument<Guid>("materialId");
@@ -316,7 +323,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        PrivateKey privateKey = _httpContextAccessor.HttpContext.Session.GetPrivateKey();
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Address buyerAvatarAddress = context.GetArgument<Address>("buyerAvatarAddress");
                         Address sellerAgentAddress = context.GetArgument<Address>("sellerAgentAddress");
@@ -366,7 +373,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        PrivateKey privateKey = _httpContextAccessor.HttpContext.Session.GetPrivateKey();
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Address sellerAvatarAddress = context.GetArgument<Address>("sellerAvatarAddress");
                         Guid itemId = context.GetArgument<Guid>("itemId");
@@ -408,7 +415,7 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         NineChroniclesNodeService service = context.Source;
-                        PrivateKey privateKey = service.MinerPrivateKey;
+                        PrivateKey privateKey = _httpContextAccessor.HttpContext.Session.GetPrivateKey();
                         BlockChain<NineChroniclesActionType> blockChain = service.Swarm.BlockChain;
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
 
