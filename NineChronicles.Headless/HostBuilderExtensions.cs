@@ -5,12 +5,15 @@ using System.Net;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Formatters;
+using Libplanet.Action;
+using Libplanet.Headless.Hosting;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Nekoyume.Action;
 
 namespace NineChronicles.Headless
 {
@@ -34,7 +37,10 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
-                services.AddSingleton(provider => properties.Libplanet);
+                if (properties.Libplanet is { } libplanetNodeServiceProperties)
+                {
+                    services.AddSingleton<LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>>(provider => libplanetNodeServiceProperties);
+                }
                 services.AddSingleton(provider =>
                 {
                     return new ActionEvaluationPublisher(
@@ -121,12 +127,14 @@ namespace NineChronicles.Headless
                                     MaxReceiveMessageSize = null,
                                 };
 
-                                endpoints.MapMagicOnionHttpGateway("_",
-                                    app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}", options));
-                                endpoints.MapMagicOnionSwagger("swagger",
-                                    app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                        .MethodHandlers, "/_/");
+                                if (app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
+                                    is { } definition)
+                                {
+                                    endpoints.MapMagicOnionHttpGateway("_",
+                                        definition.MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}", options));
+                                    endpoints.MapMagicOnionSwagger("swagger",
+                                        definition.MethodHandlers, "/_/");
+                                }
 
                                 endpoints.MapMagicOnionService();
                             });
