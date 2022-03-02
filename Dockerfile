@@ -32,9 +32,15 @@ COPY --from=build-env /app/out .
 # Install native deps & utilities for production
 RUN apt-get update \
     && apt-get install -y --allow-unauthenticated \
-        libc6-dev jq \
-     && rm -rf /var/lib/apt/lists/*
+    libc6-dev jq wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# https://dotnettools-support.jetbrains.com/hc/en-us/community/posts/4414724012178-Can-we-use-dotMemory-profiler-for-the-dotnet-application-which-are-hosted-in-Azure-Kubernetes-Cluster-
+RUN mkdir /app/dotmemory \
+    && cd /app/dotmemory \
+    && wget https://download.jetbrains.com/resharper/dotUltimate.2021.3.3/JetBrains.dotMemory.Console.linux-x64.2021.3.3.tar.gz \
+    && tar -xvzf JetBrains.dotMemory.Console.linux-x64.2021.3.3.tar.gz
 
 VOLUME /data
 
-ENTRYPOINT ["dotnet", "NineChronicles.Headless.Executable.dll"]
+ENTRYPOINT ["/app/dotmemory/dotmemory", "start-net-core", "NineChronicles.Headless.Executable.dll", "--trigger-timer=30m", "--save-to-dir=/data/workspaces", "--temp-dir=/tmp"]
