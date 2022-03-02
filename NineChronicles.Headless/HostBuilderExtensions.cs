@@ -57,7 +57,7 @@ namespace NineChronicles.Headless
         }
 
         public static IHostBuilder UseNineChroniclesRPC(
-            this IHostBuilder builder, 
+            this IHostBuilder builder,
             RpcNodeServiceProperties properties
         )
         {
@@ -99,47 +99,11 @@ namespace NineChronicles.Headless
                 {
                     hostBuilder.ConfigureKestrel(options =>
                     {
-                        if (properties.HttpOptions is { } httpOptions)
-                        {
-                            options.ListenAnyIP(httpOptions.Port, listenOptions =>
-                            {
-                                listenOptions.Protocols = HttpProtocols.Http1;
-                            });   
-                        }
-
                         options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
                         {
                             listenOptions.Protocols = HttpProtocols.Http2;
                         });
                     });
-
-                    if (properties.HttpOptions is { })
-                    {
-                        hostBuilder.Configure(app =>
-                        {
-                            app.UseRouting();
-
-                            app.UseEndpoints(endpoints =>
-                            {
-                                var options = new GrpcChannelOptions
-                                {
-                                    Credentials = ChannelCredentials.Insecure,
-                                    MaxReceiveMessageSize = null,
-                                };
-
-                                if (app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()
-                                    is { } definition)
-                                {
-                                    endpoints.MapMagicOnionHttpGateway("_",
-                                        definition.MethodHandlers, GrpcChannel.ForAddress($"http://{properties.RpcListenHost}:{properties.RpcListenPort}", options));
-                                    endpoints.MapMagicOnionSwagger("swagger",
-                                        definition.MethodHandlers, "/_/");
-                                }
-
-                                endpoints.MapMagicOnionService();
-                            });
-                        });   
-                    }
                 });
         }
     }
