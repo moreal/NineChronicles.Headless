@@ -135,6 +135,10 @@ namespace NineChronicles.Headless.Tests
         public MonsterCollectionSheet MonsterCollectionSheet { get; private set; }
 
         public MonsterCollectionRewardSheet MonsterCollectionRewardSheet { get; private set; }
+
+        public StakeRegularRewardSheet StakeRegularRewardSheet { get; private set; }
+
+        public StakeAchievementRewardSheet StakeAchievementRewardSheet { get; private set; }
 #nullable restore
 
         public void ItemSheetInitialize()
