@@ -160,27 +160,26 @@ namespace NineChronicles.Headless.GraphTypes
                     if (!(store.GetFirstTxIdBlockHashIndex(txId) is { } txExecutedBlockHash))
                     {
                         return blockChain.GetStagedTransactionIds().Contains(txId)
-                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null, null, null)
-                            : new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null);
+                            ? new TxResult(TxStatus.STAGING, null, null, null, null, null, null, null, null)
+                            : new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null, null);
                     }
 
                     try
                     {
                         TxExecution execution = blockChain.GetTxExecution(txExecutedBlockHash, txId);
-                        Block<PolymorphicAction<ActionBase>> txExecutedBlock = blockChain[txExecutedBlockHash];
                         return execution switch
                         {
-                            TxSuccess txSuccess => new TxResult(TxStatus.SUCCESS, txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(), null, null, txSuccess.UpdatedStates, txSuccess.FungibleAssetsDelta, txSuccess.UpdatedFungibleAssets),
-                            TxFailure txFailure => new TxResult(TxStatus.FAILURE, txExecutedBlock.Index,
-                                txExecutedBlock.Hash.ToString(), txFailure.ExceptionName, txFailure.ExceptionMetadata, null, null, null),
+                            TxSuccess txSuccess => new TxResult(TxStatus.SUCCESS, 0,
+                                txSuccess.BlockHash.ToString(), null, null, txSuccess.UpdatedStates, txSuccess.FungibleAssetsDelta, txSuccess.UpdatedFungibleAssets, txSuccess.EventLogs),
+                            TxFailure txFailure => new TxResult(TxStatus.FAILURE, 0,
+                                txFailure.BlockHash.ToString(), txFailure.ExceptionName, txFailure.ExceptionMetadata, null, null, null, null),
                             _ => throw new NotImplementedException(
                                 $"{nameof(execution)} is not expected concrete class.")
                         };
                     }
                     catch (Exception)
                     {
-                        return new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null);
+                        return new TxResult(TxStatus.INVALID, null, null, null, null, null, null, null, null);
                     }
                 }
             );

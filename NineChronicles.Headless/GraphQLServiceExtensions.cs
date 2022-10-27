@@ -38,6 +38,7 @@ namespace NineChronicles.Headless
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.FungibleAssetBalancesType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.UpdatedStateType>();
+            services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxResultType.EventLogType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.TxStatusType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.BencodexValueType>();
             services.TryAddSingleton<Libplanet.Explorer.GraphTypes.FungibleAssetValueType>();
