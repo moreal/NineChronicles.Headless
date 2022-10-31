@@ -170,7 +170,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return execution switch
                         {
                             TxSuccess txSuccess => new TxResult(TxStatus.SUCCESS, 0,
-                                txSuccess.BlockHash.ToString(), null, null, txSuccess.UpdatedStates, txSuccess.FungibleAssetsDelta, txSuccess.UpdatedFungibleAssets, txSuccess.EventLogs),
+                                txSuccess.BlockHash.ToString(), null, null, txSuccess.UpdatedStates, txSuccess.FungibleAssetsDelta, txSuccess.UpdatedFungibleAssets, txSuccess.Logs),
                             TxFailure txFailure => new TxResult(TxStatus.FAILURE, 0,
                                 txFailure.BlockHash.ToString(), txFailure.ExceptionName, txFailure.ExceptionMetadata, null, null, null, null),
                             _ => throw new NotImplementedException(

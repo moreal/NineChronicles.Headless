@@ -119,7 +119,7 @@ namespace Libplanet.Headless
                 updatedStates: ImmutableDictionary<Address, IValue>.Empty,
                 fungibleAssetsDelta: txSuccess.FungibleAssetsDelta,
                 updatedFungibleAssets: txSuccess.UpdatedFungibleAssets,
-                eventLogs: txSuccess.EventLogs
+                logs: txSuccess.Logs
             );
             InternalStore.PutTxExecution(reducedTxSuccess);
         }
