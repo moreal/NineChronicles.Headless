@@ -1,6 +1,7 @@
 using Libplanet.Action;
 using Libplanet.Blockchain;
 using Libplanet.Explorer.Interfaces;
+using Libplanet.Headless.Hosting;
 using Libplanet.Store;
 using Nekoyume.Action;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -9,15 +10,19 @@ namespace NineChronicles.Headless
 {
     public class BlockChainContext : IBlockChainContext<NCAction>
     {
-        private readonly StandaloneContext _standaloneContext;
+        private readonly BlockChain<NCAction> _blockChain;
+        private readonly IStore _store;
+        private readonly SwarmService<NCAction> _swarmService;
 
-        public BlockChainContext(StandaloneContext standaloneContext)
+        public BlockChainContext(BlockChain<NCAction> blockChain, IStore store, SwarmService<NCAction> swarmService)
         {
-            _standaloneContext = standaloneContext;
+            _blockChain = blockChain;
+            _store = store;
+            _swarmService = swarmService;
         }
 
-        public bool Preloaded => _standaloneContext.NodeStatus.PreloadEnded;
-        public BlockChain<PolymorphicAction<ActionBase>>? BlockChain => _standaloneContext.BlockChain;
-        public IStore? Store => _standaloneContext.Store;
+        public bool Preloaded => _swarmService.PreloadFinished;
+        public BlockChain<PolymorphicAction<ActionBase>>? BlockChain => _blockChain;
+        public IStore? Store => _store;
     }
 }

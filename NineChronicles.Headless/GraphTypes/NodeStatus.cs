@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using Libplanet.Headless.Hosting;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -30,7 +31,7 @@ namespace NineChronicles.Headless.GraphTypes
 
         public bool IsMining { get; set; }
 
-        public NodeStatusType(StandaloneContext context)
+        public NodeStatusType(SwarmService<NCAction> swarmService, BlockChain<NCAction> blockChain, LibplanetNodeServiceProperties<NCAction> properties, AgentDictionary agentDictionary)
         {
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "bootstrapEnded",
@@ -40,14 +41,12 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "preloadEnded",
                 description: "Whether the current libplanet node has ended preloading.",
-                resolve: _ => context.PreloadEnded
+                resolve: _ => swarmService.PreloadFinished
             );
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "tip",
                 description: "Block header of the tip block from the current canonical chain.",
-                resolve: _ => context.BlockChain is { } blockChain
-                    ? BlockHeaderType.FromBlock(blockChain.Tip)
-                    : null
+                resolve: _ => blockChain.Tip
             );
             Field<NonNullGraphType<ListGraphType<BlockHeaderType>>>(
                 name: "topmostBlocks",
@@ -74,13 +73,8 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "The topmost blocks from the current node.",
                 resolve: fieldContext =>
                 {
-                    if (context.BlockChain is null)
-                    {
-                        throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
-                    }
-
                     IEnumerable<Block<NCAction>> blocks =
-                        GetTopmostBlocks(context.BlockChain, fieldContext.GetArgument<int>("offset"));
+                        GetTopmostBlocks(blockChain, fieldContext.GetArgument<int>("offset"));
                     if (fieldContext.GetArgument<Address?>("miner") is { } miner)
                     {
                         blocks = blocks.Where(b => b.Miner.Equals(miner));
@@ -102,65 +96,44 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Ids of staged transactions from the current node.",
                 resolve: fieldContext =>
                 {
-                    if (context.BlockChain is null)
-                    {
-                        throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
-                    }
-
                     if (!fieldContext.HasArgument("address"))
                     {
-                        return context.BlockChain.GetStagedTransactionIds();
+                        return blockChain.GetStagedTransactionIds();
                     }
                     else
                     {
                         Address address = fieldContext.GetArgument<Address>("address");
-                        IImmutableSet<TxId> stagedTransactionIds = context.BlockChain.GetStagedTransactionIds();
+                        IImmutableSet<TxId> stagedTransactionIds = blockChain.GetStagedTransactionIds();
 
                         return stagedTransactionIds.Where(txId =>
-                        context.BlockChain.GetTransaction(txId).Signer.Equals(address));
+                        blockChain.GetTransaction(txId).Signer.Equals(address));
                     }
                 }
             );
             Field<IntGraphType>(
                 name: "stagedTxIdsCount",
                 description: "The number of ids of staged transactions from the current node.",
-                resolve: fieldContext =>
-                {
-                    if (context.BlockChain is null)
-                    {
-                        throw new InvalidOperationException($"{nameof(context.BlockChain)} is null.");
-                    }
-
-                    return context.BlockChain.GetStagedTransactionIds().Count;
-                }
+                resolve: fieldContext => blockChain.GetStagedTransactionIds().Count
             );
             Field<NonNullGraphType<BlockHeaderType>>(
                 name: "genesis",
                 description: "Block header of the genesis block from the current chain.",
-                resolve: fieldContext =>
-                    context.BlockChain is { } blockChain
-                        ? BlockHeaderType.FromBlock(blockChain.Genesis)
-                        : null
-            );
-            Field<NonNullGraphType<BooleanGraphType>>(
-                name: "isMining",
-                description: "Whether the current node is mining.",
-                resolve: _ => context.IsMining
+                resolve: fieldContext => BlockHeaderType.FromBlock(blockChain.Genesis)
             );
             Field<AppProtocolVersionType>(
                 "appProtocolVersion",
-                resolve: _ => context.NineChroniclesNodeService?.Swarm.AppProtocolVersion);
+                resolve: _ => properties.AppProtocolVersion);
 
             Field<ListGraphType<AddressType>>(
                 name: "subscriberAddresses",
                 description: "A list of subscribers' address",
-                resolve: _ => context.AgentAddresses.Keys
+                resolve: _ => agentDictionary.Keys
             );
 
             Field<IntGraphType>(
                 name: "subscriberAddressesCount",
                 description: "The number of a list of subscribers' address",
-                resolve: _ => context.AgentAddresses.Count
+                resolve: _ => agentDictionary.Count
             );
 
             Field<StringGraphType>(

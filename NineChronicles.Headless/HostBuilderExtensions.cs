@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
+using System.Reactive.Subjects;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Formatters;
@@ -10,7 +11,9 @@ using Lib9c.Renderer;
 using Libplanet.Action;
 using Libplanet.Blockchain.Renderers;
 using Libplanet.Blockchain.Renderers.Debug;
+using Libplanet.Headless;
 using Libplanet.Headless.Hosting;
+using Libplanet.Net;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -18,6 +21,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
+using Nekoyume.Model.State;
+using NineChronicles.Headless.GraphTypes;
 using NineChronicles.RPC.Shared.Exceptions;
 using Serilog;
 using Serilog.Events;
@@ -117,6 +122,14 @@ namespace NineChronicles.Headless
                         }
                     );
                 });
+                services.AddSingleton<Subject<DifferentAppProtocolVersionEncounter>>();
+                services.AddSingleton<Subject<Notification>>();
+                services.AddSingleton<Subject<NodeException>>();
+                services.AddSingleton<Subject<MonsterCollectionState>>();
+                services.AddSingleton<Subject<MonsterCollectionStatus>>();
+                services.AddSingleton<Subject<NodeStatusType>>();
+                services.AddSingleton<Subject<PreloadState>>();
+                services.AddSingleton<AgentDictionary>();
             });
         }
 

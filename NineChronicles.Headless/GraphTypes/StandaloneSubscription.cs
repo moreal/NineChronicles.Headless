@@ -24,6 +24,7 @@ using Nekoyume.TableData;
 using NineChronicles.Headless.GraphTypes.States;
 using Libplanet.Blockchain;
 using Serilog;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -102,16 +103,29 @@ namespace NineChronicles.Headless.GraphTypes
         }
 
         private const int _blockRenderDegreeOfParallelism = 8;
+        
+        private readonly BlockChain<NCAction> _blockChain;
+        private readonly AgentDictionary _agentDictionary;
 
         private BlockHeader? _tipHeader;
 
         private ISubject<TipChanged> _subject = new ReplaySubject<TipChanged>();
 
-        private StandaloneContext StandaloneContext { get; }
-
-        public StandaloneSubscription(StandaloneContext standaloneContext)
+        public StandaloneSubscription(
+            BlockChain<NCAction> blockChain,
+            BlockRenderer blockRenderer,
+            ActionRenderer actionRenderer,
+            AgentDictionary agentDictionary,
+            Subject<DifferentAppProtocolVersionEncounter> differentAppProtocolVersionEncounterSubject,
+            Subject<Notification> notificationSubject,
+            Subject<NodeException> nodeExceptionSubject,
+            Subject<MonsterCollectionState> monsterCollectionStateSubject,
+            Subject<MonsterCollectionStatus> monsterCollectionStatusSubject,
+            Subject<NodeStatusType> nodeStatusSubject,
+            Subject<PreloadState> preloadStateSubject)
         {
-            StandaloneContext = standaloneContext;
+            _blockChain = blockChain;
+            _agentDictionary = agentDictionary;
             AddField(new EventStreamFieldType
             {
                 Name = "tipChanged",
@@ -124,14 +138,14 @@ namespace NineChronicles.Headless.GraphTypes
                 Name = "preloadProgress",
                 Type = typeof(PreloadStateType),
                 Resolver = new FuncFieldResolver<PreloadState>(context => (context.Source as PreloadState)!),
-                Subscriber = new EventStreamResolver<PreloadState>(context => StandaloneContext.PreloadStateSubject.AsObservable()),
+                Subscriber = new EventStreamResolver<PreloadState>(context => preloadStateSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
                 Name = "nodeStatus",
                 Type = typeof(NodeStatusType),
                 Resolver = new FuncFieldResolver<NodeStatusType>(context => (context.Source as NodeStatusType)!),
-                Subscriber = new EventStreamResolver<NodeStatusType>(context => StandaloneContext.NodeStatusSubject.AsObservable()),
+                Subscriber = new EventStreamResolver<NodeStatusType>(context => nodeStatusSubject.AsObservable()),
             });
             AddField(new EventStreamFieldType
             {
@@ -140,8 +154,8 @@ namespace NineChronicles.Headless.GraphTypes
                 Resolver = new FuncFieldResolver<DifferentAppProtocolVersionEncounter>(context =>
                     (DifferentAppProtocolVersionEncounter)context.Source!),
                 Subscriber = new EventStreamResolver<DifferentAppProtocolVersionEncounter>(context =>
-                    StandaloneContext.DifferentAppProtocolVersionEncounterSubject
-                        .Sample(standaloneContext.DifferentAppProtocolVersionEncounterInterval)
+                    differentAppProtocolVersionEncounterSubject
+                        .Sample(TimeSpan.FromSeconds(30))
                         .AsObservable()
                     ),
             });
@@ -151,8 +165,8 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NotificationType>),
                 Resolver = new FuncFieldResolver<Notification>(context => (context.Source as Notification)!),
                 Subscriber = new EventStreamResolver<Notification>(context =>
-                    StandaloneContext.NotificationSubject
-                        .Sample(standaloneContext.NotificationInterval)
+                    notificationSubject
+                        .Sample(TimeSpan.FromSeconds(30))
                         .AsObservable()),
             });
             AddField(new EventStreamFieldType
@@ -161,8 +175,8 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<NodeExceptionType>),
                 Resolver = new FuncFieldResolver<NodeException>(context => (context.Source as NodeException)!),
                 Subscriber = new EventStreamResolver<NodeException>(context =>
-                    StandaloneContext.NodeExceptionSubject
-                        .Sample(standaloneContext.NodeExceptionInterval)
+                    nodeExceptionSubject
+                        .Sample(TimeSpan.FromSeconds(30))
                         .AsObservable()),
             });
             AddField(new EventStreamFieldType
@@ -171,8 +185,8 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<MonsterCollectionStateType>),
                 Resolver = new FuncFieldResolver<MonsterCollectionState>(context => (context.Source as MonsterCollectionState)!),
                 Subscriber = new EventStreamResolver<MonsterCollectionState>(context =>
-                    standaloneContext.MonsterCollectionStateSubject
-                        .Sample(standaloneContext.MonsterCollectionStateInterval)
+                    monsterCollectionStateSubject
+                        .Sample(TimeSpan.FromSeconds(30))
                         .AsObservable()),
             });
             AddField(new EventStreamFieldType
@@ -181,8 +195,8 @@ namespace NineChronicles.Headless.GraphTypes
                 Type = typeof(NonNullGraphType<MonsterCollectionStatusType>),
                 Resolver = new FuncFieldResolver<MonsterCollectionStatus>(context => (context.Source as MonsterCollectionStatus)!),
                 Subscriber = new EventStreamResolver<MonsterCollectionStatus>(context =>
-                    standaloneContext.MonsterCollectionStatusSubject
-                        .Sample(standaloneContext.MonsterCollectionStatusInterval)
+                    monsterCollectionStatusSubject
+                        .Sample(TimeSpan.FromSeconds(30))
                         .AsObservable()),
             });
             AddField(new EventStreamFieldType
@@ -228,12 +242,10 @@ namespace NineChronicles.Headless.GraphTypes
                 Subscriber = new EventStreamResolver<string>(SubscribeBalance),
             });
 
-            BlockRenderer blockRenderer = standaloneContext.NineChroniclesNodeService!.BlockRenderer;
             blockRenderer.BlockSubject
                 .ObserveOn(NewThreadScheduler.Default)
                 .Subscribe(RenderBlock);
 
-            ActionRenderer actionRenderer = standaloneContext.NineChroniclesNodeService!.ActionRenderer;
             actionRenderer.EveryRender<MonsterCollect>()
                 .ObserveOn(NewThreadScheduler.Default)
                 .Subscribe(RenderMonsterCollectionStateSubject);
@@ -249,10 +261,10 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address,
+            _agentDictionary.TryAdd(address,
                 (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
                     new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
+            _agentDictionary.TryGetValue(address, out var subjects);
             return subjects.stateSubject.AsObservable();
         }
 
@@ -260,10 +272,10 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address,
+            _agentDictionary.TryAdd(address,
                 (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
                     new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
+            _agentDictionary.TryGetValue(address, out var subjects);
             return subjects.statusSubject.AsObservable();
         }
 
@@ -271,10 +283,10 @@ namespace NineChronicles.Headless.GraphTypes
         {
             var address = context.GetArgument<Address>("address");
 
-            StandaloneContext.AgentAddresses.TryAdd(address,
+            _agentDictionary.TryAdd(address,
                 (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(),
                     new ReplaySubject<string>()));
-            StandaloneContext.AgentAddresses.TryGetValue(address, out var subjects);
+            _agentDictionary.TryGetValue(address, out var subjects);
             return subjects.balanceSubject.AsObservable();
         }
 
@@ -298,17 +310,11 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            if (StandaloneContext.NineChroniclesNodeService is null)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(StandaloneContext.NineChroniclesNodeService)} is null.");
-            }
-
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
             Log.Debug("StandaloneSubscription.RenderBlock started");
 
-            BlockChain<PolymorphicAction<ActionBase>> blockChain = StandaloneContext.NineChroniclesNodeService.BlockChain;
+            BlockChain<PolymorphicAction<ActionBase>> blockChain = _blockChain;
             Currency currency =
                 new GoldCurrencyState(
                     (Dictionary)blockChain.GetState(Addresses.GoldCurrency, _tipHeader.Hash)
@@ -319,8 +325,8 @@ namespace NineChronicles.Headless.GraphTypes
                 _tipHeader.Hash
             ).ToDotnetString();
             rewardSheet.Set(csv);
-            Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {StandaloneContext.AgentAddresses.Count})");
-            StandaloneContext.AgentAddresses
+            Log.Debug($"StandaloneSubscription.RenderBlock target addresses. (count: {_agentDictionary.Count})");
+            _agentDictionary
                 .AsParallel()
                 .WithDegreeOfParallelism(_blockRenderDegreeOfParallelism)
                 .ForAll(kv =>
@@ -382,22 +388,16 @@ namespace NineChronicles.Headless.GraphTypes
         private void RenderMonsterCollectionStateSubject<T>(ActionBase.ActionEvaluation<T> eval)
             where T : ActionBase
         {
-            if (!(StandaloneContext.NineChroniclesNodeService is { } service))
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(NineChroniclesNodeService)} is null.");
-            }
-
             // Skip when error.
             if (eval.Exception is { })
             {
                 return;
             }
 
-            foreach (var (address, subjects) in StandaloneContext.AgentAddresses)
+            foreach (var (address, subjects) in _agentDictionary)
             {
                 if (eval.Signer.Equals(address) &&
-                    service.BlockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
+                    _blockChain.GetState(address, _tipHeader?.Hash) is Dictionary agentDict)
                 {
                     var agentState = new AgentState(agentDict);
                     Address deriveAddress = MonsterCollectionState.DeriveAddress(address, agentState.MonsterCollectionRound);

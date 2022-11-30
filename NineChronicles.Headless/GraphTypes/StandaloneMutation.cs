@@ -21,7 +21,6 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public StandaloneMutation(
             StandaloneContext standaloneContext,
-            NineChroniclesNodeService nodeService,
             IConfiguration configuration
         )
         {
@@ -37,11 +36,11 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<ActivationStatusMutation>(
                 name: "activationStatus",
-                resolve: _ => new ActivationStatusMutation(nodeService));
+                resolve: _ => new object());
 
             Field<ActionMutation>(
                 name: "action",
-                resolve: _ => new ActionMutation(nodeService));
+                resolve: _ => new object());
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "stageTx",

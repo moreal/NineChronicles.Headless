@@ -38,6 +38,11 @@ public class SwarmService<T> : BackgroundService
         });
         await _swarm.AddPeersAsync(_peers, default, cancellationToken: stoppingToken).ConfigureAwait(false);
         await _swarm.PreloadAsync(cancellationToken: stoppingToken).ConfigureAwait(false);
+        PreloadFinished = true;
+
         await _swarm.StartAsync(cancellationToken: stoppingToken).ConfigureAwait(false);
     }
+
+    public bool BootstrapEnded { get; private set; } = false;
+    public bool PreloadFinished { get; private set; } = false;
 }

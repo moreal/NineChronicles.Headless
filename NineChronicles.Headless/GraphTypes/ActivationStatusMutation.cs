@@ -2,6 +2,8 @@ using System;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
+using Libplanet.Blockchain;
+using Libplanet.Headless.Hosting;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
@@ -11,7 +13,9 @@ namespace NineChronicles.Headless.GraphTypes
 {
     public class ActivationStatusMutation : ObjectGraphType
     {
-        public ActivationStatusMutation(NineChroniclesNodeService service)
+        public ActivationStatusMutation(
+            LibplanetNodeServiceProperties<NCAction> properties,
+            BlockChain<NCAction> blockChain)
         {
             Field<NonNullGraphType<BooleanGraphType>>("activateAccount",
                 arguments: new QueryArguments(
@@ -26,17 +30,12 @@ namespace NineChronicles.Headless.GraphTypes
                         string encodedActivationKey =
                             context.GetArgument<string>("encodedActivationKey");
                         // FIXME: Private key may not exists at this moment.
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(properties.MinerPrivateKey is { } privateKey))
                         {
                             throw new InvalidOperationException($"{nameof(privateKey)} is null.");
                         }
 
                         ActivationKey activationKey = ActivationKey.Decode(encodedActivationKey);
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
                         IValue state = blockChain.GetState(activationKey.PendingAddress);
 
                         if (!(state is Bencodex.Types.Dictionary asDict))

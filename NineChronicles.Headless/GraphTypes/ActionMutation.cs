@@ -12,13 +12,14 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using Libplanet.Action;
+using Libplanet.Headless.Hosting;
 using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
     public class ActionMutation : ObjectGraphType
     {
-        public ActionMutation(NineChroniclesNodeService service)
+        public ActionMutation(LibplanetNodeServiceProperties<NCAction> properties, BlockChain<NCAction> blockChain)
         {
             Field<NonNullGraphType<TxIdType>>("createAvatar",
                 description: "Create new avatar.",
@@ -58,14 +59,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(properties.MinerPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                            throw new InvalidOperationException($"{nameof(properties.MinerPrivateKey)} is null.");
                         }
 
                         var avatarName = context.GetArgument<string>("avatarName");
@@ -135,12 +131,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.Swarm.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         int worldId = context.GetArgument<int>("worldId");
                         int stageId = context.GetArgument<int>("stageId");
@@ -160,7 +150,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(properties.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -200,12 +190,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
-
                         int recipeId = context.GetArgument<int>("recipeId");
                         int slotIndex = context.GetArgument<int>("slotIndex");
                         int? subRecipeId = context.GetArgument<int?>("subRecipeId");
@@ -220,7 +204,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(properties.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -260,14 +244,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privatekey))
+                        if (!(properties.MinerPrivateKey is { } privatekey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.Swarm?.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                            throw new InvalidOperationException($"{nameof(properties.MinerPrivateKey)} is null.");
                         }
 
                         Guid itemId = context.GetArgument<Guid>("itemId");
@@ -309,14 +288,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(properties.MinerPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                            throw new InvalidOperationException($"{nameof(properties.MinerPrivateKey)} is null.");
                         }
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
@@ -351,14 +325,9 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        if (!(service.MinerPrivateKey is { } privateKey))
+                        if (!(properties.MinerPrivateKey is { } privateKey))
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
-                        }
-
-                        if (!(service.BlockChain is { } blockChain))
-                        {
-                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                            throw new InvalidOperationException($"{nameof(properties.MinerPrivateKey)} is null.");
                         }
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
@@ -404,11 +373,6 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
 
                         int recipeId = context.GetArgument<int>("recipeId");
                         int slotIndex = context.GetArgument<int>("slotIndex");
@@ -422,7 +386,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(properties.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -447,15 +411,10 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
 
-                        if (service.MinerPrivateKey is null)
+                        if (properties.MinerPrivateKey is null)
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(properties.MinerPrivateKey)} is null.");
                         }
 
                         int level = context.GetArgument<int>("level");
@@ -465,7 +424,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(properties.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -490,21 +449,16 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
-                        if (blockChain is null)
-                        {
-                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
-                        }
 
 
-                        if (service.MinerPrivateKey is null)
+                        if (properties.MinerPrivateKey is null)
                         {
-                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                            throw new InvalidOperationException($"{nameof(properties.MinerPrivateKey)} is null.");
                         }
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
-                        Address agentAddress = service.MinerPrivateKey.ToAddress();
-                        AgentState agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
+                        Address agentAddress = properties.MinerPrivateKey.ToAddress();
+                        AgentState agentState = new AgentState((Dictionary)blockChain.GetState(agentAddress));
 
                         var action = new ClaimMonsterCollectionReward
                         {
@@ -512,7 +466,7 @@ namespace NineChronicles.Headless.GraphTypes
                         };
 
                         var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        Transaction<NCAction> tx = blockChain.MakeTransaction(properties.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
