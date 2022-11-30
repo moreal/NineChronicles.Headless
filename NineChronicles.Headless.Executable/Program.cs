@@ -334,10 +334,9 @@ namespace NineChronicles.Headless.Executable
                     ? null
                     : new PrivateKey(ByteUtil.ParseHex(headlessConfig.MinerPrivateKeyString));
                 TimeSpan minerBlockInterval = TimeSpan.FromMilliseconds(headlessConfig.MinerBlockIntervalMilliseconds);
-                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
+                var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(properties)
                 {
                     MinerPrivateKey = minerPrivateKey,
-                    Libplanet = properties,
                     NetworkType = headlessConfig.NetworkType,
                     StrictRender = headlessConfig.StrictRendering,
                     TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),

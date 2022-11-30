@@ -12,6 +12,11 @@ namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
+        public NineChroniclesNodeServiceProperties(LibplanetNodeServiceProperties<NineChroniclesActionType> libplanet)
+        {
+            Libplanet = libplanet;
+        }
+
         /// <summary>
         /// Gets or sets a private key that is used in mining and signing transactions,
         /// which is different with the private key used in swarm to sign messages.
@@ -19,7 +24,7 @@ namespace NineChronicles.Headless.Properties
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
 
-        public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
+        public LibplanetNodeServiceProperties<NineChroniclesActionType> Libplanet { get; init; }
 
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
 

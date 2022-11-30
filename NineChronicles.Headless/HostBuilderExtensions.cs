@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
@@ -5,7 +6,10 @@ using System.Net;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Lib9c.Formatters;
+using Lib9c.Renderer;
 using Libplanet.Action;
+using Libplanet.Blockchain.Renderers;
+using Libplanet.Blockchain.Renderers.Debug;
 using Libplanet.Headless.Hosting;
 using MagicOnion.Server;
 using MessagePack;
@@ -14,6 +18,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Nekoyume.Action;
+using NineChronicles.RPC.Shared.Exceptions;
+using Serilog;
+using Serilog.Events;
+using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -25,33 +33,88 @@ namespace NineChronicles.Headless
             StandaloneContext context
         )
         {
-            NineChroniclesNodeService service =
-                NineChroniclesNodeService.Create(properties, context);
-            var rpcContext = new RpcContext
-            {
-                RpcRemoteSever = false
-            };
             return builder.ConfigureServices(services =>
             {
-                services.AddHostedService(provider => service);
-                services.AddSingleton(provider => service);
-                services.AddSingleton(provider => service.Swarm);
-                services.AddSingleton(provider => service.BlockChain);
-                services.AddSingleton(provider => service.Store);
-                if (properties.Libplanet is { } libplanetNodeServiceProperties)
+                var blockRenderer = new BlockRenderer();
+                var actionRenderer = new ActionRenderer();
+                var exceptionRenderer = new ExceptionRenderer();
+                var nodeStatusRenderer = new NodeStatusRenderer();
+
+                services.AddSingleton<BlockRenderer>(blockRenderer);
+                services.AddSingleton<ActionRenderer>(actionRenderer);
+                services.AddSingleton<ExceptionRenderer>(exceptionRenderer);
+                services.AddSingleton<NodeStatusRenderer>(nodeStatusRenderer);
+                services.AddSingleton<LoggedActionRenderer<NCAction>>(provider =>
+                    new LoggedActionRenderer<NCAction>(
+                        provider.GetRequiredService<ActionRenderer>(),
+                        provider.GetRequiredService<ILogger>(),
+                        LogEventLevel.Debug));
+                services.AddSingleton<LoggedRenderer<NCAction>>(provider =>
+                    new LoggedRenderer<NCAction>(
+                        provider.GetRequiredService<BlockRenderer>(),
+                        provider.GetRequiredService<ILogger>(),
+                        LogEventLevel.Debug));
+                services.AddSingleton<IEnumerable<IRenderer<NCAction>>>(provider =>
                 {
-                    services.AddSingleton<LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>>(provider => libplanetNodeServiceProperties);
-                }
+                    var renderers = new List<IRenderer<NCAction>>();
+                    if (properties.Libplanet.Render)
+                    {
+                        renderers.Add(provider.GetRequiredService<BlockRenderer>());
+                        renderers.Add(provider.GetRequiredService<LoggedActionRenderer<NCAction>>());
+                    }
+                    else if (properties.Libplanet.LogActionRenders)
+                    {
+                        renderers.Add(provider.GetRequiredService<BlockRenderer>());
+                        // The following "nullRenderer" does nothing.  It's just for filling
+                        // the LoggedActionRenderer<T>() constructor's parameter:
+                        IActionRenderer<NCAction> nullRenderer =
+                            new AnonymousActionRenderer<NCAction>();
+                        renderers.Add(
+                            new LoggedActionRenderer<NCAction>(
+                                nullRenderer,
+                                Log.Logger,
+                                LogEventLevel.Debug
+                            )
+                        );
+                    }
+                    else
+                    {
+                        renderers.Add(provider.GetRequiredService<LoggedRenderer<NCAction>>());
+                    }
+
+                    if (properties.StrictRender)
+                    {
+                        Log.Debug(
+                            $"Strict rendering is on. Add StrictRenderer.");
+                        renderers.Add(new ValidatingActionRenderer<NCAction>(onError: exc =>
+                            provider.GetRequiredService<ExceptionRenderer>().RenderException(
+                                RPCException.InvalidRenderException,
+                                exc.Message.Split("\n")[0]
+                            )
+                        ));
+                    }
+
+                    return renderers;
+                });
+                services.AddSingleton<LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>>(
+                    provider => properties.Libplanet);
+                services.AddLibplanet<PolymorphicAction<ActionBase>>(
+                    properties.Libplanet,
+                    properties.Libplanet.GenesisBlock,
+                    null);
                 services.AddSingleton(provider =>
                 {
                     return new ActionEvaluationPublisher(
-                        context.NineChroniclesNodeService!.BlockRenderer,
-                        context.NineChroniclesNodeService!.ActionRenderer,
-                        context.NineChroniclesNodeService!.ExceptionRenderer,
-                        context.NineChroniclesNodeService!.NodeStatusRenderer,
+                        provider.GetRequiredService<BlockRenderer>(),
+                        provider.GetRequiredService<ActionRenderer>(),
+                        provider.GetRequiredService<ExceptionRenderer>(),
+                        provider.GetRequiredService<NodeStatusRenderer>(),
                         IPAddress.Loopback.ToString(),
                         0,
-                        rpcContext
+                        new RpcContext
+                        {
+                            RpcRemoteSever = false
+                        }
                     );
                 });
             });
@@ -78,12 +141,11 @@ namespace NineChronicles.Headless
                     services.AddMagicOnion();
                     services.AddSingleton(provider =>
                     {
-                        StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
                         return new ActionEvaluationPublisher(
-                            ctx.NineChroniclesNodeService!.BlockRenderer,
-                            ctx.NineChroniclesNodeService!.ActionRenderer,
-                            ctx.NineChroniclesNodeService!.ExceptionRenderer,
-                            ctx.NineChroniclesNodeService!.NodeStatusRenderer,
+                            provider.GetRequiredService<BlockRenderer>(),
+                            provider.GetRequiredService<ActionRenderer>(),
+                            provider.GetRequiredService<ExceptionRenderer>(),
+                            provider.GetRequiredService<NodeStatusRenderer>(),
                             IPAddress.Loopback.ToString(),
                             properties.RpcListenPort,
                             context

@@ -18,6 +18,8 @@ namespace Libplanet.Headless.Hosting
 
         public PrivateKey SwarmPrivateKey { get; set; }
 
+        public PrivateKey MinerPrivateKey { get; set; }
+
         public string StoreType { get; set; }
 
         public string StorePath { get; set; }

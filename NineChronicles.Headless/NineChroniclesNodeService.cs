@@ -218,61 +218,6 @@ namespace NineChronicles.Headless
             strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
         }
 
-        public static NineChroniclesNodeService Create(
-            NineChroniclesNodeServiceProperties properties,
-            StandaloneContext context
-        )
-        {
-            if (context is null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
-            {
-                context.PreloadStateSubject.OnNext(state);
-            });
-
-            if (properties.Libplanet is null)
-            {
-                throw new InvalidOperationException($"{nameof(properties.Libplanet)} is null.");
-            }
-
-            properties.Libplanet.DifferentAppProtocolVersionEncountered =
-                (BoundPeer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
-                {
-                    context.DifferentAppProtocolVersionEncounterSubject.OnNext(
-                        new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
-                    );
-                };
-
-            properties.Libplanet.NodeExceptionOccurred =
-                (code, message) =>
-                {
-                    context.NodeExceptionSubject.OnNext(
-                        new NodeException(code, message)
-                    );
-                };
-
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(properties.NetworkType);
-            var service = new NineChroniclesNodeService(
-                properties.MinerPrivateKey,
-                properties.Libplanet,
-                blockPolicy,
-                properties.NetworkType,
-                properties.MinerBlockInterval,
-                preloadProgress: progress,
-                ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
-                ignorePreloadFailure: properties.IgnorePreloadFailure,
-                strictRendering: properties.StrictRender,
-                txLifeTime: properties.TxLifeTime,
-                minerCount: properties.MinerCount,
-                txQuotaPerSigner: properties.TxQuotaPerSigner
-            );
-            service.ConfigureContext(context);
-            return service;
-        }
-
         internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType)
         {
             var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
