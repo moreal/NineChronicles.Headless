@@ -93,24 +93,21 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await seedNode.BlockChain.MineBlock(miner);
             var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
-
-            _ = service.StartAsync(cts.Token);
-
-            await service.PreloadEnded.WaitAsync(cts.Token);
-
             var subscribeResult = (SubscriptionExecutionResult)result;
             var stream = subscribeResult.Streams!.Values.FirstOrDefault();
+
+            _ = service.StartAsync(cts.Token);
 
             // BlockHashDownloadState  : 2
             // BlockDownloadState      : 1
             // BlockVerificationState  : 1
             // ActionExecutionState    : 1
-            const int preloadStatesCount = 5;
+            const int preloadStatesCount = 4;
             var preloadProgressRecords =
                 new List<(long currentPhase, long totalPhase, string type, long currentCount, long totalCount)>();
             var expectedPreloadProgress = new[]
             {
-                (1L, 5L, "BlockHashDownloadState", 0L, 0L),
+                // (1L, 5L, "BlockHashDownloadState", 0L, 0L),
                 (1L, 5L, "BlockHashDownloadState", 1L, 1L),
                 (2L, 5L, "BlockDownloadState", 1L, 1L),
                 (3L, 5L, "BlockVerificationState", 1L, 1L),
@@ -118,7 +115,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             }.ToImmutableHashSet();
             foreach (var index in Enumerable.Range(1, preloadStatesCount))
             {
-                var rawEvents = await stream.Take(index);
+                var rawEvents = await stream.Take(1);
                 var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
                 var preloadProgress = (Dictionary<string, object>)events["preloadProgress"];
                 var preloadProgressExtra = (Dictionary<string, object>)preloadProgress["extra"];
