@@ -9,12 +9,17 @@ using Lib9c.Formatters;
 using Libplanet.Action;
 using Libplanet.Headless.Hosting;
 using MagicOnion.Server;
+using MagicOnion.Server.Diagnostics;
+using MagicOnion.Server.OpenTelemetry;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Options;
 using Nekoyume.Action;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using Sentry;
 
 namespace NineChronicles.Headless
@@ -78,7 +83,21 @@ namespace NineChronicles.Headless
                     {
                         options.MaxReceiveMessageSize = null;
                     });
-                    services.AddMagicOnion();
+                    services.AddMagicOnion().AddOpenTelemetry();
+                    services.AddOpenTelemetry()
+                        .WithMetrics(
+                            builder => builder
+                                .AddMeter("MagicOnion")
+                                .AddRuntimeInstrumentation()
+                                .AddAspNetCoreInstrumentation()
+                                .AddPrometheusExporter());
+                    services.Configure<MagicOnionOptions>(options =>
+                    {
+                        options.GlobalFilters.Add(new OpenTelemetryCollectorFilterFactoryAttribute());
+                        options.GlobalStreamingHubFilters.Add(new OpenTelemetryHubCollectorFilterFactoryAttribute());
+                    });
+
+                    services.AddSingleton<IMagicOnionLogger, OpenTelemetryCollectorLogger>();
                     services.AddSingleton(provider =>
                     {
                         StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();

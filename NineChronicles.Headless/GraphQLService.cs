@@ -185,6 +185,8 @@ namespace NineChronicles.Headless
                     endpoints.MapHealthChecks("/health-check");
                 });
 
+                app.UseOpenTelemetryPrometheusScrapingEndpoint();
+
                 // WebSocket으로 운영합니다.
                 app.UseWebSockets();
                 app.UseGraphQLWebSockets<StandaloneSchema>("/graphql");
