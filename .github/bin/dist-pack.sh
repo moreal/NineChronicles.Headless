@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -exv
 
 . "$(dirname "$0")/constants.sh"
 
