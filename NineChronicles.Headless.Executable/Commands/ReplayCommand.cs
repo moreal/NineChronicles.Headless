@@ -14,6 +14,8 @@ using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blocks;
+using Libplanet.Extensions.RemoteActionEvaluator;
+using Libplanet.Extensions.RemoteBlockChainStates;
 using Libplanet.RocksDBStore;
 using Libplanet.Store;
 using Libplanet.Tx;
@@ -345,6 +347,43 @@ namespace NineChronicles.Headless.Executable.Commands
                 disposables.Clear();
             }
         }
+        
+        [Command(Description = "Evaluate blocks and check state root hash")]
+        public int BlocksWithRemote(
+            [Option('s', Description = "An absolute path of block storage.(rocksdb)")]
+            string storePath,
+            [Option]
+            string blockHash,
+            [Option("endpoint", new[] { 'e' })]
+            string remoteBlockChainStatesProviderEndpoint)
+        {
+            var disposables = new List<IDisposable?>();
+            try
+            {
+                var (store, stateStore, blockChain) = LoadBlockchain(storePath, remoteBlockChainStatesProviderEndpoint);
+                disposables.Add(store);
+                disposables.Add(stateStore);
+
+                var block = store.GetBlock(BlockHash.FromString(blockHash));
+                var blockStateRootHash = blockChain.DetermineBlockStateRootHash(block, out IReadOnlyList<IActionEvaluation> actionEvaluations);
+                if (!block.StateRootHash.Equals(blockStateRootHash))
+                {
+                    _console.Error.WriteLine(
+                        $"Invalid state root hash. Expected {block.StateRootHash} but {blockStateRootHash}");
+                }
+            }
+            finally
+            {
+                foreach (var disposable in disposables)
+                {
+                    disposable?.Dispose();
+                }
+
+                disposables.Clear();
+            }
+
+            return 0;
+        }
 
         private static (FileStream? fs, StreamWriter? sw) GetOutputFileStream(
             string outputPath,
@@ -374,7 +413,7 @@ namespace NineChronicles.Headless.Executable.Commands
         private (
             IStore store,
             IStateStore stateStore,
-            BlockChain<NCAction> blockChain) LoadBlockchain(string storePath)
+            BlockChain<NCAction> blockChain) LoadBlockchain(string storePath, string? explorerEndpoint = null)
         {
             // Load store and genesis block.
             if (!Directory.Exists(storePath))
@@ -402,6 +441,9 @@ namespace NineChronicles.Headless.Executable.Commands
             var stagePolicy = new VolatileStagePolicy<NCAction>();
             var stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             var stateStore = new TrieStateStore(stateKeyValueStore);
+            IBlockChainStates blockChainStates = explorerEndpoint is { } nonNullableExplorerEndpoint
+                ? new RemoteBlockChainStates(new Uri(explorerEndpoint))
+                : new BlockChainStates(store, stateStore);
             return (
                 store,
                 stateStore,
@@ -410,7 +452,9 @@ namespace NineChronicles.Headless.Executable.Commands
                     stagePolicy,
                     store,
                     stateStore,
-                    genesisBlock));
+                    genesisBlock,
+                    blockChainStates: blockChainStates,
+                    renderers: null));
         }
 
         private Transaction LoadTx(string txPath)
