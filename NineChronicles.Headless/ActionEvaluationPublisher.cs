@@ -16,6 +16,8 @@ using Bencodex;
 using Bencodex.Types;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Lib9c.Abstractions;
+using Lib9c.Formatters;
 using Lib9c.Renderers;
 using Libplanet;
 using Libplanet.Blocks;
@@ -305,7 +307,16 @@ namespace NineChronicles.Headless
                                     : ev.Action;
                                 var extra = new Dictionary<string, IValue>();
 
-                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, ev.PreviousStates, ev.RandomSeed, extra);
+                                var previousStates = ev.PreviousStates;
+                                if (pa is IBattleArenaV1 battleArena)
+                                {
+                                    if (previousStates.GetState(battleArena.EnemyAvatarAddress) is { } state)
+                                    {
+                                        previousStates = previousStates.SetState(battleArena.EnemyAvatarAddress, state);
+                                    }
+                                }
+
+                                var eval = new NCActionEvaluation(pa, ev.Signer, ev.BlockIndex, ev.OutputStates, ev.Exception, previousStates, ev.RandomSeed, extra);
                                 var encoded = MessagePackSerializer.Serialize(eval);
                                 var c = new MemoryStream();
                                 await using (var df = new DeflateStream(c, CompressionLevel.Fastest))
