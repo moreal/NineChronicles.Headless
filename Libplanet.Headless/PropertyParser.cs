@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Net;
 
@@ -11,10 +12,7 @@ namespace Libplanet.Headless
         {
             try
             {
-                var uri = new Uri(iceServerInfo);
-                string[] userInfo = uri.UserInfo.Split(':');
-
-                return new IceServer(new[] {uri}, userInfo[0], userInfo[1]);
+                return new IceServer(new Uri(iceServerInfo));
             }
             catch (Exception e)
             {
@@ -24,7 +22,7 @@ namespace Libplanet.Headless
                     $"{e.StackTrace}", innerException: e);
             }
         }
-        
+
         public static BoundPeer ParsePeer(string peerInfo)
         {
             var tokens = peerInfo.Split(',');

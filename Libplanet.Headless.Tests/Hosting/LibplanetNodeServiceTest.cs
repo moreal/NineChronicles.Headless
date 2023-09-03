@@ -1,15 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
+using System.Reflection;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
+using Libplanet.Action.State;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Xunit;
 
 namespace Libplanet.Headless.Tests.Hosting
@@ -19,9 +23,19 @@ namespace Libplanet.Headless.Tests.Hosting
         [Fact]
         public void Constructor()
         {
-            var genesisBlock = BlockChain<DummyAction>.MakeGenesisBlock(HashAlgorithmType.Of<SHA256>());
-            var service = new LibplanetNodeService<DummyAction>(
-                new LibplanetNodeServiceProperties<DummyAction>()
+            var policy = new BlockPolicy();
+            var stagePolicy = new VolatileStagePolicy();
+            var blockChainStates = new BlockChainStates(
+                new MemoryStore(),
+                new TrieStateStore(new MemoryKeyValueStore()));
+            var actionLoader = new SingleActionLoader(typeof(DummyAction));
+            var actionEvaluator = new ActionEvaluator(
+                _ => policy.BlockAction,
+                blockChainStates,
+                actionLoader);
+            var genesisBlock = BlockChain.ProposeGenesisBlock(actionEvaluator);
+            var service = new LibplanetNodeService(
+                new LibplanetNodeServiceProperties()
                 {
                     AppProtocolVersion = new AppProtocolVersion(),
                     GenesisBlock = genesisBlock,
@@ -29,14 +43,15 @@ namespace Libplanet.Headless.Tests.Hosting
                     StoreStatesCacheSize = 2,
                     StorePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
-                blockPolicy: new BlockPolicy<DummyAction>(),
-                stagePolicy: new VolatileStagePolicy<DummyAction>(),
+                blockPolicy: policy,
+                stagePolicy: stagePolicy,
                 renderers: null,
-                minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                 preloadProgress: null,
-                exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
-                preloadStatusHandlerAction: isPreloadStart => { }
+                exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
+                preloadStatusHandlerAction: isPreloadStart => { },
+                actionLoader: actionLoader
             );
 
             Assert.NotNull(service);
@@ -47,21 +62,24 @@ namespace Libplanet.Headless.Tests.Hosting
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var service = new LibplanetNodeService<DummyAction>(
-                    new LibplanetNodeServiceProperties<DummyAction>()
+                IActionLoader actionLoader = new SingleActionLoader(typeof(DummyAction));
+                var service = new LibplanetNodeService(
+                    new LibplanetNodeServiceProperties()
                     {
                         AppProtocolVersion = new AppProtocolVersion(),
                         SwarmPrivateKey = new PrivateKey(),
+                        ConsensusPrivateKey = new PrivateKey(),
                         StoreStatesCacheSize = 2,
                         Host = IPAddress.Loopback.ToString(),
+                        IceServers = new List<IceServer>(),
                     },
-                    blockPolicy: new BlockPolicy<DummyAction>(),
-                    stagePolicy: new VolatileStagePolicy<DummyAction>(),
+                    blockPolicy: new BlockPolicy(),
+                    stagePolicy: new VolatileStagePolicy(),
                     renderers: null,
-                    minerLoopAction: (chain, swarm, pk, ct) => Task.CompletedTask,
                     preloadProgress: null,
-                    exceptionHandlerAction:  (code, msg) => throw new Exception($"{code}, {msg}"),
-                    preloadStatusHandlerAction: isPreloadStart => { }
+                    exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
+                    preloadStatusHandlerAction: isPreloadStart => { },
+                    actionLoader: actionLoader
                 );
             });
         }
@@ -72,7 +90,7 @@ namespace Libplanet.Headless.Tests.Hosting
 
             IAccountStateDelta IAction.Execute(IActionContext context)
             {
-                return context.PreviousStates;
+                return context.PreviousState;
             }
 
             void IAction.LoadPlainValue(IValue plainValue)

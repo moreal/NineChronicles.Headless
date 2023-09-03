@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
+using AspNetCoreRateLimit;
 using GraphQL.Server;
 using GraphQL.Utilities;
+using Grpc.Core;
+using Grpc.Net.Client;
+using Libplanet.Explorer.Schemas;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,7 +16,6 @@ using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Middleware;
 using NineChronicles.Headless.Properties;
 using Serilog;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless
 {
@@ -24,6 +28,10 @@ namespace NineChronicles.Headless
         public const string SecretTokenKey = "secret";
 
         public const string NoCorsKey = "noCors";
+
+        public const string UseMagicOnionKey = "useMagicOnion";
+
+        public const string MagicOnionTargetKey = "magicOnionTarget";
 
         private GraphQLNodeServiceProperties GraphQlNodeServiceProperties { get; }
 
@@ -54,9 +62,25 @@ namespace NineChronicles.Headless
                             dictionary[NoCorsKey] = string.Empty;
                         }
 
-                        builder.AddInMemoryCollection(dictionary);
+                        if (GraphQlNodeServiceProperties.UseMagicOnion)
+                        {
+                            dictionary[UseMagicOnionKey] = string.Empty;
+                        }
+
+                        if (GraphQlNodeServiceProperties.HttpOptions is { } options)
+                        {
+                            dictionary[MagicOnionTargetKey] = options.Target;
+                        }
+
+                        builder.AddInMemoryCollection(dictionary!);
+                    })
+                    .ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP((int)listenPort!, listenOptions =>
+                        {
+                            listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+                        });
                     });
-                builder.UseUrls($"http://{listenHost}:{listenPort}/");
             });
         }
 
@@ -71,6 +95,16 @@ namespace NineChronicles.Headless
 
             public void ConfigureServices(IServiceCollection services)
             {
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
+                {
+                    services.AddOptions();
+                    services.AddMemoryCache();
+                    services.Configure<CustomIpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+                    services.AddInMemoryRateLimiting();
+                    services.AddMvc(options => options.EnableEndpointRouting = false);
+                    services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+                }
+
                 if (!(Configuration[NoCorsKey] is null))
                 {
                     services.AddCors(
@@ -92,15 +126,15 @@ namespace NineChronicles.Headless
                             options.EnableMetrics = true;
                             options.UnhandledExceptionDelegate = context =>
                             {
-                                Console.Error.WriteLine(context.Exception.ToString());
-                                Console.Error.WriteLine(context.ErrorMessage);
+                                Log.Error(context.Exception.ToString());
+                                Log.Error(context.ErrorMessage);
                             };
                         })
                     .AddSystemTextJson()
                     .AddWebSockets()
                     .AddDataLoader()
                     .AddGraphTypes(typeof(StandaloneSchema))
-                    .AddLibplanetExplorer<NCAction>()
+                    .AddLibplanetExplorer()
                     .AddUserContextBuilder<UserContextBuilder>()
                     .AddGraphQLAuthorization(
                         options => options.AddPolicy(
@@ -119,6 +153,9 @@ namespace NineChronicles.Headless
                     app.UseDeveloperExceptionPage();
                 }
 
+                // Capture requests
+                app.UseMiddleware<HttpCaptureMiddleware>();
+
                 app.UseMiddleware<LocalAuthenticationMiddleware>();
                 if (Configuration[NoCorsKey] is null)
                 {
@@ -131,9 +168,36 @@ namespace NineChronicles.Headless
 
                 app.UseRouting();
                 app.UseAuthorization();
+                if (Convert.ToBoolean(Configuration.GetSection("IpRateLimiting")["EnableEndpointRateLimiting"]))
+                {
+                    app.UseMiddleware<CustomRateLimitMiddleware>();
+                    app.UseMiddleware<IpBanMiddleware>();
+                    app.UseMvc();
+                }
+
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
+                    if (!(Configuration[UseMagicOnionKey] is null))
+                    {
+                        endpoints.MapMagicOnionService();
+
+                        if (Configuration[MagicOnionTargetKey] is { } magicOnionTarget)
+                        {
+                            var options = new GrpcChannelOptions
+                            {
+                                Credentials = ChannelCredentials.Insecure,
+                                MaxReceiveMessageSize = null,
+                            };
+
+                            endpoints.MapMagicOnionHttpGateway("_",
+                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
+                                    .MethodHandlers, GrpcChannel.ForAddress($"http://{magicOnionTarget}", options));
+                            endpoints.MapMagicOnionSwagger("swagger",
+                                app.ApplicationServices.GetService<MagicOnion.Server.MagicOnionServiceDefinition>()!
+                                    .MethodHandlers, "/_/");
+                        }
+                    }
                     endpoints.MapHealthChecks("/health-check");
                 });
 
@@ -141,9 +205,12 @@ namespace NineChronicles.Headless
                 app.UseWebSockets();
                 app.UseGraphQLWebSockets<StandaloneSchema>("/graphql");
                 app.UseGraphQL<StandaloneSchema>("/graphql");
+                app.UseGraphQL<LibplanetExplorerSchema>("/graphql/explorer");
 
-                // Prints 
+                // Prints
                 app.UseMiddleware<GraphQLSchemaMiddleware<StandaloneSchema>>("/schema.graphql");
+
+                app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
                 // /ui/playground 옵션을 통해서 Playground를 사용할 수 있습니다.
                 app.UseGraphQLPlayground();

@@ -1,12 +1,19 @@
-using Grpc.Core;
-using MagicOnion.Hosting;
+using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NineChronicles.Headless.Properties;
 using System.Net;
 using Lib9c.Formatters;
+using Libplanet.Action;
+using Libplanet.Headless.Hosting;
 using MessagePack;
 using MessagePack.Resolvers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Nekoyume.Action;
+using NineChronicles.Headless.Middleware;
+using NineChronicles.Headless.Services;
+using Sentry;
 
 namespace NineChronicles.Headless
 {
@@ -30,7 +37,18 @@ namespace NineChronicles.Headless
                 services.AddSingleton(provider => service);
                 services.AddSingleton(provider => service.Swarm);
                 services.AddSingleton(provider => service.BlockChain);
-                services.AddSingleton(provider => properties.Libplanet);
+                services.AddSingleton(provider => service.Store);
+
+                if (properties.StateServiceManagerService is { } stateServiceManagerServiceOptions)
+                {
+                    var stateServiceManagerService = new StateServiceManagerService(stateServiceManagerServiceOptions);
+                    services.AddSingleton(provider => stateServiceManagerService);
+                }
+
+                if (properties.Libplanet is { } libplanetNodeServiceProperties)
+                {
+                    services.AddSingleton<LibplanetNodeServiceProperties>(provider => libplanetNodeServiceProperties);
+                }
                 services.AddSingleton(provider =>
                 {
                     return new ActionEvaluationPublisher(
@@ -40,47 +58,51 @@ namespace NineChronicles.Headless
                         context.NineChroniclesNodeService!.NodeStatusRenderer,
                         IPAddress.Loopback.ToString(),
                         0,
-                        rpcContext
+                        rpcContext,
+                        provider.GetRequiredService<ConcurrentDictionary<string, ITransaction>>()
                     );
                 });
             });
         }
 
         public static IHostBuilder UseNineChroniclesRPC(
-            this IHostBuilder builder, 
-            RpcNodeServiceProperties properties
+            this IHostBuilder builder,
+            RpcNodeServiceProperties properties,
+            ActionEvaluationPublisher actionEvaluationPublisher
         )
         {
             var context = new RpcContext
             {
                 RpcRemoteSever = properties.RpcRemoteServer
             };
+
             return builder
-                .UseMagicOnion(
-                    new ServerPort(properties.RpcListenHost, properties.RpcListenPort, ServerCredentials.Insecure)
-                )
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => context);
-                    services.AddSingleton(provider =>
+                    services.AddGrpc(options =>
                     {
-                        StandaloneContext? ctx = provider.GetRequiredService<StandaloneContext>();
-                        return new ActionEvaluationPublisher(
-                            ctx.NineChroniclesNodeService!.BlockRenderer,
-                            ctx.NineChroniclesNodeService!.ActionRenderer,
-                            ctx.NineChroniclesNodeService!.ExceptionRenderer,
-                            ctx.NineChroniclesNodeService!.NodeStatusRenderer,
-                            IPAddress.Loopback.ToString(),
-                            properties.RpcListenPort,
-                            context
-                        );
+                        options.MaxReceiveMessageSize = null;
+                        options.Interceptors.Add<GrpcCaptureMiddleware>(actionEvaluationPublisher);
                     });
+                    services.AddMagicOnion();
+                    services.AddSingleton(_ => actionEvaluationPublisher);
                     var resolver = MessagePack.Resolvers.CompositeResolver.Create(
                         NineChroniclesResolver.Instance,
                         StandardResolver.Instance
                     );
                     var options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
                     MessagePackSerializer.DefaultOptions = options;
+                })
+                .ConfigureWebHostDefaults(hostBuilder =>
+                {
+                    hostBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(properties.RpcListenPort, listenOptions =>
+                        {
+                            listenOptions.Protocols = HttpProtocols.Http2;
+                        });
+                    });
                 });
         }
     }

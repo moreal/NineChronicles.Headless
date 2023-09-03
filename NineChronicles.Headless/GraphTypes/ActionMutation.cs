@@ -1,18 +1,15 @@
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Crypto;
 using Libplanet.Blockchain;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Tx;
+using Libplanet.Types.Tx;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using Libplanet.Action;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -84,8 +81,8 @@ namespace NineChronicles.Headless.GraphTypes
                             name = avatarName,
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -115,11 +112,6 @@ namespace NineChronicles.Headless.GraphTypes
                         Name = "stageId",
                         Description = "Stage ID."
                     },
-                    new QueryArgument<NonNullGraphType<AddressType>>
-                    {
-                        Name = "rankingMapAddress",
-                        Description = "Address of RankingMapState containing the avatar address."
-                    },
                     new QueryArgument<ListGraphType<GuidGraphType>>
                     {
                         Name = "costumeIds",
@@ -134,13 +126,19 @@ namespace NineChronicles.Headless.GraphTypes
                     {
                         Name = "consumableIds",
                         Description = "List of consumable id for use."
+                    },
+                    new QueryArgument<ListGraphType<NonNullGraphType<RuneSlotInfoInputType>>>
+                    {
+                        Name = "runeSlotInfos",
+                        DefaultValue = new List<RuneSlotInfo>(),
+                        Description = "List of rune slot info for equip."
                     }
                 ),
                 resolve: context =>
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.Swarm.BlockChain;
+                        BlockChain? blockChain = service.Swarm.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -153,20 +151,21 @@ namespace NineChronicles.Headless.GraphTypes
                         List<Guid> costumeIds = context.GetArgument<List<Guid>>("costumeIds") ?? new List<Guid>();
                         List<Guid> equipmentIds = context.GetArgument<List<Guid>>("equipmentIds") ?? new List<Guid>();
                         List<Guid> consumableIds = context.GetArgument<List<Guid>>("consumableIds") ?? new List<Guid>();
+                        List<RuneSlotInfo> runeSlotInfos = context.GetArgument<List<RuneSlotInfo>>("runeSlotInfos");
 
                         var action = new HackAndSlash
                         {
-                            avatarAddress = avatarAddress,
-                            worldId = worldId,
-                            stageId = stageId,
-                            rankingMapAddress = rankingMapAddress,
-                            costumes = costumeIds,
-                            equipments = equipmentIds,
-                            foods = consumableIds,
+                            AvatarAddress = avatarAddress,
+                            WorldId = worldId,
+                            StageId = stageId,
+                            Costumes = costumeIds,
+                            Equipments = equipmentIds,
+                            Foods = consumableIds,
+                            RuneInfos = runeSlotInfos,
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -194,7 +193,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The empty combination slot index to combine equipment. 0 ~ 3"
+                        Description = "The empty combination slot index to combine equipment. 0 ~ 3"
                     },
                     new QueryArgument<IntGraphType>
                     {
@@ -206,7 +205,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -225,8 +224,8 @@ namespace NineChronicles.Headless.GraphTypes
                             subRecipeId = subRecipeId
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -259,7 +258,7 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The empty combination slot index to upgrade equipment. 0 ~ 3"
+                        Description = "The empty combination slot index to upgrade equipment. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
@@ -289,8 +288,8 @@ namespace NineChronicles.Headless.GraphTypes
                             materialId = materialId,
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(privatekey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(privatekey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -332,8 +331,50 @@ namespace NineChronicles.Headless.GraphTypes
                             avatarAddress = avatarAddress
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(privateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(privateKey, actions);
+                        return tx.Id;
+                    }
+                    catch (Exception e)
+                    {
+                        var msg = $"Unexpected exception occurred during {typeof(ActionMutation)}: {e}";
+                        context.Errors.Add(new ExecutionError(msg, e));
+                        Log.Error(msg, e);
+                        throw;
+                    }
+                });
+            Field<NonNullGraphType<TxIdType>>("chargeActionPoint",
+                description: "Charge Action Points using Material.",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AddressType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Avatar to use potion."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        if (!(service.MinerPrivateKey is { } privateKey))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.MinerPrivateKey)} is null.");
+                        }
+
+                        if (!(service.BlockChain is { } blockChain))
+                        {
+                            throw new InvalidOperationException($"{nameof(service.Swarm.BlockChain)} is null.");
+                        }
+
+                        Address avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                        var action = new ChargeActionPoint
+                        {
+                            avatarAddress = avatarAddress
+                        };
+
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(privateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -361,14 +402,14 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<IntGraphType>>
                     {
                         Name = "slotIndex",
-                        Description =  "The empty combination slot index to combine consumable. 0 ~ 3"
+                        Description = "The empty combination slot index to combine consumable. 0 ~ 3"
                     }
                 ),
                 resolve: context =>
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -385,8 +426,8 @@ namespace NineChronicles.Headless.GraphTypes
                             slotIndex = slotIndex,
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -411,7 +452,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -428,8 +469,8 @@ namespace NineChronicles.Headless.GraphTypes
                             level = level,
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)
@@ -454,7 +495,7 @@ namespace NineChronicles.Headless.GraphTypes
                 {
                     try
                     {
-                        BlockChain<NCAction>? blockChain = service.BlockChain;
+                        BlockChain? blockChain = service.BlockChain;
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
@@ -468,15 +509,15 @@ namespace NineChronicles.Headless.GraphTypes
 
                         Address avatarAddress = context.GetArgument<Address>("avatarAddress");
                         Address agentAddress = service.MinerPrivateKey.ToAddress();
-                        AgentState agentState = new AgentState((Dictionary) service.BlockChain.GetState(agentAddress));
+                        AgentState agentState = new AgentState((Dictionary)service.BlockChain.GetState(agentAddress));
 
                         var action = new ClaimMonsterCollectionReward
                         {
                             avatarAddress = avatarAddress,
                         };
 
-                        var actions = new NCAction[] { action };
-                        Transaction<NCAction> tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
+                        var actions = new ActionBase[] { action };
+                        Transaction tx = blockChain.MakeTransaction(service.MinerPrivateKey, actions);
                         return tx.Id;
                     }
                     catch (Exception e)

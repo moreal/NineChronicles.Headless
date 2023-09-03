@@ -1,31 +1,41 @@
 using GraphQL;
 using Libplanet;
 using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Action.Loader;
+using Libplanet.Action.Sys;
+using Libplanet.Types.Assets;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.KeyStore;
 using Libplanet.Net;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Action;
+using Nekoyume.Action.Loader;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Tests.Common;
 using Serilog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Security.Cryptography;
+using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex.Types;
+using Libplanet.Types.Tx;
 using Xunit.Abstractions;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
@@ -39,39 +49,60 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             _output = output;
 
-            var goldCurrency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            var goldCurrency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
 
-            var fixturePath = Path.Combine("..", "..", "..", "..", "Lib9c", ".Lib9c.Tests", "Data", "TableCSV");
-            var sheets = TableSheetsImporter.ImportSheets(fixturePath);
+            var sheets = TableSheetsImporter.ImportSheets();
             var blockAction = new RewardGold();
-            var genesisBlock = BlockChain<NCAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>(),
-                new NCAction[]
-                {
-                    new InitializeStates(
-                        rankingState: new RankingState(),
-                        shopState: new ShopState(),
-                        gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
-                        redeemCodeState: new RedeemCodeState(Bencodex.Types.Dictionary.Empty
-                            .Add("address", RedeemCodeState.Address.Serialize())
-                            .Add("map", Bencodex.Types.Dictionary.Empty)
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockAction,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new NCActionLoader());
+            var genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
+                transactions: ImmutableList<Transaction>.Empty.Add(Transaction.Create(0,
+                    AdminPrivateKey, null, new ActionBase[]
+                    {
+                        new InitializeStates(
+                            rankingState: new RankingState0(),
+                            shopState: new ShopState(),
+                            gameConfigState: new GameConfigState(sheets[nameof(GameConfigSheet)]),
+                            redeemCodeState: new RedeemCodeState(
+                                Bencodex.Types.Dictionary.Empty
+                                    .Add("address", RedeemCodeState.Address.Serialize())
+                                    .Add("map", Bencodex.Types.Dictionary.Empty)
+                            ),
+                            adminAddressState: new AdminState(AdminAddress, 10000),
+                            activatedAccountsState: new ActivatedAccountsState(),
+                            goldCurrencyState: new GoldCurrencyState(goldCurrency),
+                            goldDistributions: new GoldDistribution[] { },
+                            tableSheets: sheets,
+                            pendingActivationStates: new PendingActivationState[] { }
                         ),
-                        adminAddressState: new AdminState(AdminAddress, 10000),
-                        activatedAccountsState: new ActivatedAccountsState(),
-                        goldCurrencyState: new GoldCurrencyState(goldCurrency),
-                        goldDistributions: new GoldDistribution[]{ },
-                        tableSheets: sheets,
-                        pendingActivationStates: new PendingActivationState[]{ }
-                    ),
-                }, blockAction: blockAction);
+                    }.ToPlainValues())).AddRange(new IAction[]
+                {
+                    new Initialize(
+                        new ValidatorSet(
+                            new[] { new Validator(ProposerPrivateKey.PublicKey, BigInteger.One) }
+                                .ToList()),
+                        states: ImmutableDictionary.Create<Address, IValue>())
+                }.Select((sa, nonce) => Transaction.Create(nonce + 1, AdminPrivateKey, null, new[] { sa.PlainValue }))),
+                privateKey: AdminPrivateKey);
 
-            var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, new PrivateKey());
+            var ncService = ServiceBuilder.CreateNineChroniclesNodeService(genesisBlock, ProposerPrivateKey);
             var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
             var keyStore = new Web3KeyStore(tempKeyStorePath);
 
             StandaloneContextFx = new StandaloneContext
             {
                 KeyStore = keyStore,
+                DifferentAppProtocolVersionEncounterInterval = TimeSpan.FromSeconds(1),
+                NotificationInterval = TimeSpan.FromSeconds(1),
+                NodeExceptionInterval = TimeSpan.FromSeconds(1),
+                MonsterCollectionStateInterval = TimeSpan.FromSeconds(1),
+                MonsterCollectionStatusInterval = TimeSpan.FromSeconds(1),
             };
             ncService.ConfigureContext(StandaloneContextFx);
 
@@ -86,15 +117,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ncService.NodeStatusRenderer,
                 "",
                 0,
-                new RpcContext()
+                new RpcContext(),
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
             );
             services.AddSingleton(publisher);
             services.AddSingleton(StandaloneContextFx);
             services.AddSingleton<IConfiguration>(configuration);
             services.AddGraphTypes();
-            services.AddLibplanetExplorer<NCAction>();
-            services.AddSingleton<StateQuery>();
+            services.AddLibplanetExplorer();
             services.AddSingleton(ncService);
+            services.AddSingleton(ncService.Store);
             ServiceProvider serviceProvider = services.BuildServiceProvider();
             Schema = new StandaloneSchema(serviceProvider);
 
@@ -105,17 +137,29 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
         protected Address AdminAddress => AdminPrivateKey.ToAddress();
 
+        protected PrivateKey ProposerPrivateKey { get; } = new PrivateKey();
+
+        protected List<PrivateKey> GenesisValidators
+        {
+            get => new List<PrivateKey>
+            {
+                ProposerPrivateKey
+            }.OrderBy(key => key.ToAddress()).ToList();
+        }
+
         protected StandaloneSchema Schema { get; }
 
         protected StandaloneContext StandaloneContextFx { get; }
 
-        protected BlockChain<NCAction> BlockChain =>
+        protected BlockChain BlockChain =>
             StandaloneContextFx.BlockChain!;
 
         protected IKeyStore KeyStore =>
             StandaloneContextFx.KeyStore!;
 
         protected IDocumentExecuter DocumentExecutor { get; }
+
+        protected SubscriptionDocumentExecuter SubscriptionDocumentExecuter { get; } = new SubscriptionDocumentExecuter();
 
         protected Task<ExecutionResult> ExecuteQueryAsync(string query)
         {
@@ -125,32 +169,40 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 Schema = Schema,
             });
         }
-
-        protected async Task<Task> StartAsync<T>(
-            Swarm<T> swarm,
-            CancellationToken cancellationToken = default
-        )
-            where T : IAction, new()
+        protected Task<ExecutionResult> ExecuteSubscriptionQueryAsync(string query)
+        {
+            return SubscriptionDocumentExecuter.ExecuteAsync(new ExecutionOptions
+            {
+                Query = query,
+                Schema = Schema,
+            });
+        }
+        protected async Task<Task> StartAsync(
+            Swarm swarm,
+            CancellationToken cancellationToken = default)
         {
             Task task = swarm.StartAsync(
-                millisecondsDialTimeout: 200,
-                millisecondsBroadcastTxInterval: 200,
+                dialTimeout: TimeSpan.FromMilliseconds(200),
+                broadcastBlockInterval: TimeSpan.FromMilliseconds(200),
+                broadcastTxInterval: TimeSpan.FromMilliseconds(200),
                 cancellationToken: cancellationToken
             );
             await swarm.WaitForRunningAsync();
             return task;
         }
 
-        protected LibplanetNodeService<T> CreateLibplanetNodeService<T>(
-            Block<T> genesisBlock,
+        protected LibplanetNodeService CreateLibplanetNodeService(
+            Block genesisBlock,
             AppProtocolVersion appProtocolVersion,
             PublicKey appProtocolVersionSigner,
-            Progress<PreloadState>? preloadProgress = null,
-            IEnumerable<Peer>? peers = null,
-            ImmutableHashSet<BoundPeer>? staticPeers = null)
-            where T : IAction, new()
+            Progress<BlockSyncState>? preloadProgress = null,
+            IEnumerable<BoundPeer>? peers = null,
+            ImmutableList<BoundPeer>? consensusSeeds = null,
+            ImmutableList<BoundPeer>? consensusPeers = null)
         {
-            var properties = new LibplanetNodeServiceProperties<T>
+            var consensusPrivateKey = new PrivateKey();
+
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = appProtocolVersion,
@@ -158,24 +210,45 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 StoreStatesCacheSize = 2,
                 StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusPort = null,
                 Port = null,
                 NoMiner = true,
                 Render = false,
-                Peers = peers ?? ImmutableHashSet<Peer>.Empty,
+                Peers = peers ?? ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = ImmutableHashSet<PublicKey>.Empty.Add(appProtocolVersionSigner),
-                StaticPeers = staticPeers ?? ImmutableHashSet<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
+                ConsensusSeeds = consensusSeeds ?? ImmutableList<BoundPeer>.Empty,
+                ConsensusPeers = consensusPeers ?? ImmutableList<BoundPeer>.Empty,
             };
 
-            return new LibplanetNodeService<T>(
+            return new LibplanetNodeService(
                 properties,
-                blockPolicy: new BlockPolicy<T>(),
-                stagePolicy: new VolatileStagePolicy<T>(),
-                renderers: new[] { new DummyRenderer<T>() },
-                minerLoopAction: (chain, swarm, privateKey, _) => Task.CompletedTask,
+                blockPolicy: new BlockPolicy(),
+                stagePolicy: new VolatileStagePolicy(),
+                renderers: new[] { new DummyRenderer() },
                 preloadProgress: preloadProgress,
                 exceptionHandlerAction: (code, msg) => throw new Exception($"{code}, {msg}"),
-                preloadStatusHandlerAction: isPreloadStart => { }
+                preloadStatusHandlerAction: isPreloadStart => { },
+                actionLoader: StaticActionLoaderSingleton.Instance
             );
+        }
+
+        protected BlockCommit? GenerateBlockCommit(long height, BlockHash hash, List<PrivateKey> validators)
+        {
+            return height != 0
+                ? new BlockCommit(
+                    height,
+                    0,
+                    hash,
+                    validators.Select(validator => new VoteMetadata(
+                            height,
+                            0,
+                            hash,
+                            DateTimeOffset.UtcNow,
+                            validator.PublicKey,
+                            VoteFlag.PreCommit).Sign(validator)).ToImmutableArray())
+                : (BlockCommit?)null;
         }
     }
 }

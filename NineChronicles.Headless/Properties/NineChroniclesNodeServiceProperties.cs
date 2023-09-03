@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using Libplanet;
+using Libplanet.Action.Loader;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 using Libplanet.Headless;
 
 namespace NineChronicles.Headless.Properties
 {
     public class NineChroniclesNodeServiceProperties
     {
+        public NineChroniclesNodeServiceProperties(IActionLoader actionLoader, StateServiceManagerServiceOptions? stateServiceManagerServiceOptions)
+        {
+            ActionLoader = actionLoader;
+            StateServiceManagerService = stateServiceManagerServiceOptions;
+        }
+
         /// <summary>
         /// Gets or sets a private key that is used in mining and signing transactions,
         /// which is different with the private key used in swarm to sign messages.
@@ -19,7 +25,7 @@ namespace NineChronicles.Headless.Properties
         /// <seealso cref="LibplanetNodeServiceProperties{T}.SwarmPrivateKey"/>
         public PrivateKey? MinerPrivateKey { get; set; }
 
-        public LibplanetNodeServiceProperties<NineChroniclesActionType>? Libplanet { get; set; }
+        public LibplanetNodeServiceProperties? Libplanet { get; set; }
 
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
 
@@ -40,10 +46,15 @@ namespace NineChronicles.Headless.Properties
 
         public int MinerCount { get; set; }
 
+        public TimeSpan MinerBlockInterval { get; set; } = TimeSpan.Zero;
+
         public int TxQuotaPerSigner { get; set; }
 
+        public IActionLoader ActionLoader { get; init; }
 
-        public static LibplanetNodeServiceProperties<NineChroniclesActionType>
+        public StateServiceManagerServiceOptions? StateServiceManagerService { get; }
+
+        public static LibplanetNodeServiceProperties
             GenerateLibplanetNodeServiceProperties(
                 string? appProtocolVersionToken = null,
                 string? genesisBlockPath = null,
@@ -52,6 +63,7 @@ namespace NineChronicles.Headless.Properties
                 string? swarmPrivateKeyString = null,
                 string? storeType = null,
                 string? storePath = null,
+                bool noReduceStore = false,
                 int storeStateCacheSize = 100,
                 string[]? iceServerStrings = null,
                 string[]? peerStrings = null,
@@ -65,28 +77,32 @@ namespace NineChronicles.Headless.Properties
                 int messageTimeout = 60,
                 int tipTimeout = 60,
                 int demandBuffer = 1150,
-                string[]? staticPeerStrings = null,
                 bool preload = true,
                 int minimumBroadcastTarget = 10,
                 int bucketSize = 16,
                 string chainTipStaleBehaviorType = "reboot",
-                int pollInterval = 15,
                 int maximumPollPeers = int.MaxValue,
-                string transportType = "tcp")
+                ushort? consensusPort = null,
+                string? consensusPrivateKeyString = null,
+                string[]? consensusSeedStrings = null,
+                double? consensusTargetBlockIntervalMilliseconds = null,
+                IActionEvaluatorConfiguration? actionEvaluatorConfiguration = null)
         {
             var swarmPrivateKey = string.IsNullOrEmpty(swarmPrivateKeyString)
                 ? new PrivateKey()
                 : new PrivateKey(ByteUtil.ParseHex(swarmPrivateKeyString));
+            var consensusPrivateKey = string.IsNullOrEmpty(consensusPrivateKeyString)
+                ? null
+                : new PrivateKey(ByteUtil.ParseHex(consensusPrivateKeyString));
 
             peerStrings ??= Array.Empty<string>();
             iceServerStrings ??= Array.Empty<string>();
-            staticPeerStrings ??= Array.Empty<string>();
 
             var iceServers = iceServerStrings.Select(PropertyParser.ParseIceServer).ToImmutableArray();
             var peers = peerStrings.Select(PropertyParser.ParsePeer).ToImmutableArray();
-            var staticPeers = staticPeerStrings.Select(PropertyParser.ParsePeer).ToImmutableHashSet();
+            var consensusSeeds = consensusSeedStrings?.Select(PropertyParser.ParsePeer).ToImmutableList();
 
-            return new LibplanetNodeServiceProperties<NineChroniclesActionType>
+            return new LibplanetNodeServiceProperties
             {
                 Host = swarmHost,
                 Port = swarmPort,
@@ -101,23 +117,25 @@ namespace NineChronicles.Headless.Properties
                 Peers = peers,
                 StoreType = storeType,
                 StorePath = storePath,
+                NoReduceStore = noReduceStore,
                 StoreStatesCacheSize = storeStateCacheSize,
                 Render = render,
-                Workers = workers,
                 Confirmations = Math.Max(confirmations, 0),
                 NonblockRenderer = nonblockRenderer,
                 NonblockRendererQueue = Math.Max(nonblockRendererQueue, 1),
                 MessageTimeout = TimeSpan.FromSeconds(messageTimeout),
                 TipTimeout = TimeSpan.FromSeconds(tipTimeout),
                 DemandBuffer = demandBuffer,
-                StaticPeers = staticPeers,
                 Preload = preload,
                 MinimumBroadcastTarget = minimumBroadcastTarget,
                 BucketSize = bucketSize,
                 ChainTipStaleBehavior = chainTipStaleBehaviorType,
-                PollInterval = TimeSpan.FromSeconds(pollInterval),
                 MaximumPollPeers = maximumPollPeers,
-                TransportType = transportType
+                ConsensusPort = consensusPort,
+                ConsensusSeeds = consensusSeeds,
+                ConsensusPrivateKey = consensusPrivateKey,
+                ConsensusTargetBlockIntervalMilliseconds = consensusTargetBlockIntervalMilliseconds,
+                ActionEvaluatorConfiguration = actionEvaluatorConfiguration ?? new DefaultActionEvaluatorConfiguration(),
             };
         }
 
@@ -143,7 +161,7 @@ namespace NineChronicles.Headless.Properties
             {
                 RpcListenHost = rpcListenHost,
                 RpcListenPort = rpcPortValue,
-                RpcRemoteServer = rpcRemoteServer
+                RpcRemoteServer = rpcRemoteServer,
             };
         }
     }

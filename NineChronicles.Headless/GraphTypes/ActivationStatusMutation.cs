@@ -5,7 +5,6 @@ using GraphQL.Types;
 using Nekoyume.Action;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -13,7 +12,10 @@ namespace NineChronicles.Headless.GraphTypes
     {
         public ActivationStatusMutation(NineChroniclesNodeService service)
         {
+            DeprecationReason = "Since NCIP-15, it doesn't care account activation.";
+
             Field<NonNullGraphType<BooleanGraphType>>("activateAccount",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
@@ -49,12 +51,12 @@ namespace NineChronicles.Headless.GraphTypes
                         ActivateAccount action = activationKey.CreateActivateAccount(
                             pendingActivationState.Nonce);
 
-                        var actions = new NCAction[] { action };
+                        var actions = new ActionBase[] { action };
                         blockChain.MakeTransaction(privateKey, actions);
                     }
                     catch (ArgumentException ae)
                     {
-                        context.Errors.Add(new ExecutionError("The given key isn't in the correct foramt.", ae));
+                        context.Errors.Add(new ExecutionError("The given key isn't in the correct format.", ae));
                         return false;
                     }
                     catch (Exception e)

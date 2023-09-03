@@ -6,23 +6,23 @@ using Bencodex;
 using Bencodex.Types;
 using GraphQL;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
+using Lib9c;
 using Libplanet.Blockchain;
-using Libplanet.Blocks;
+using Libplanet.Common;
+using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using Microsoft.Extensions.Configuration;
-using Libplanet.Tx;
 using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using Libplanet.Blockchain.Renderers;
-using Libplanet.Headless;
 using Nekoyume.Model;
-using Serilog;
+using NineChronicles.Headless.GraphTypes.States;
+using static NineChronicles.Headless.NCActionUtils;
+using Transaction = Libplanet.Types.Tx.Transaction;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -43,17 +43,22 @@ namespace NineChronicles.Headless.GraphTypes
                     BlockHash? blockHash = context.GetArgument<byte[]>("hash") switch
                     {
                         byte[] bytes => new BlockHash(bytes),
-                        null => null,
+                        null => standaloneContext.BlockChain?.Tip?.Hash,
                     };
 
-                    if (standaloneContext.BlockChain is { } blockChain)
+                    if (!(standaloneContext.BlockChain is { } chain))
                     {
-                        DelayedRenderer<NCAction>? delayedRenderer = blockChain.GetDelayedRenderer();
-                        blockHash = delayedRenderer?.Tip?.Hash;
+                        return null;
                     }
 
-                    return (standaloneContext.BlockChain?.ToAccountStateGetter(blockHash),
-                        standaloneContext.BlockChain?.ToAccountBalanceGetter(blockHash));
+                    return new StateContext(
+                        chain.GetBlockState(blockHash),
+                        blockHash switch
+                        {
+                            BlockHash bh => chain[bh].Index,
+                            null => chain.Tip!.Index,
+                        }
+                    );
                 }
             );
 
@@ -65,7 +70,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -77,7 +82,7 @@ namespace NineChronicles.Headless.GraphTypes
                         ? blockChain.Tip.Hash
                         : new BlockHash(blockHashByteArray);
 
-                    var state = blockChain.GetState(address, blockHash);
+                    var state = blockChain.GetStates(new[] { address }, blockHash)[0];
 
                     return new Codec().Encode(state);
                 }
@@ -110,19 +115,21 @@ namespace NineChronicles.Headless.GraphTypes
 
                     var recipient = context.GetArgument<Address?>("recipient");
 
-                    IEnumerable<Transaction<NCAction>> txs = digest.TxIds
+                    IEnumerable<Transaction> txs = digest.TxIds
                         .Select(b => new TxId(b.ToBuilder().ToArray()))
-                        .Select(store.GetTransaction<NCAction>);
+                        .Select(store.GetTransaction);
                     var filteredTransactions = txs.Where(tx =>
-                        tx.Actions.Count == 1 &&
-                        tx.Actions.First().InnerAction is TransferAsset transferAsset &&
+                        tx.Actions!.Count == 1 &&
+                        ToAction(tx.Actions.First()) is ITransferAsset transferAsset &&
                         (!recipient.HasValue || transferAsset.Recipient == recipient) &&
                         transferAsset.Amount.Currency.Ticker == "NCG" &&
                         store.GetTxExecution(blockHash, tx.Id) is TxSuccess);
 
-                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string memo)
+                    TransferNCGHistory ToTransferNCGHistory(TxSuccess txSuccess, string? memo)
                     {
-                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta.Select(pair =>
+                        var rawTransferNcgHistories = txSuccess.FungibleAssetsDelta
+                            .Where(pair => pair.Value.Values.Any(fav => fav.Currency.Ticker == "NCG"))
+                            .Select(pair =>
                                 (pair.Key, pair.Value.Values.First(fav => fav.Currency.Ticker == "NCG")))
                             .ToArray();
                         var ((senderAddress, _), (recipientAddress, amount)) =
@@ -139,14 +146,15 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
                     var histories = filteredTransactions.Select(tx =>
-                        ToTransferNCGHistory((TxSuccess) store.GetTxExecution(blockHash, tx.Id),
-                            tx.Actions.Single().InnerAction.As<TransferAsset>().Memo));
+                        ToTransferNCGHistory((TxSuccess)store.GetTxExecution(blockHash, tx.Id),
+                            ((ITransferAsset)ToAction(tx.Actions!.Single())).Memo));
 
                     return histories;
                 });
 
             Field<KeyStoreType>(
                 name: "keyStore",
+                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
                 resolve: context => standaloneContext.KeyStore
             ).AuthorizeWithLocalPolicyIf(useSecretToken);
 
@@ -155,8 +163,9 @@ namespace NineChronicles.Headless.GraphTypes
                 resolve: _ => new NodeStatusType(standaloneContext)
             );
 
-            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery<NCAction>>>(
+            Field<NonNullGraphType<Libplanet.Explorer.Queries.ExplorerQuery>>(
                 name: "chainQuery",
+                deprecationReason: "Use /graphql/explorer",
                 resolve: context => new { }
             );
 
@@ -168,6 +177,7 @@ namespace NineChronicles.Headless.GraphTypes
             Field<NonNullGraphType<ActivationStatusQuery>>(
                     name: "activationStatus",
                     description: "Check if the provided address is activated.",
+                    deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                     resolve: context => new ActivationStatusQuery(standaloneContext))
                 .AuthorizeWithLocalPolicyIf(useSecretToken);
 
@@ -184,7 +194,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -216,7 +226,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -227,17 +237,17 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            Field<TransactionType<NCAction>>(
+            Field<TransactionType>(
                 name: "getTx",
                 deprecationReason: "The root query is not the best place for getTx so it was moved. " +
                                    "Use transaction.getTx()",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<TxIdType>>
-                        {Name = "txId", Description = "transaction id."}
+                    { Name = "txId", Description = "transaction id." }
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<PolymorphicAction<ActionBase>> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -275,7 +285,7 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Get monster collection status by address.",
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -299,30 +309,32 @@ namespace NineChronicles.Headless.GraphTypes
                     }
 
 
-                    BlockHash? offset = blockChain.GetDelayedRenderer()?.Tip?.Hash;
-                    if (blockChain.GetState(agentAddress, offset) is Dictionary agentDict)
+                    BlockHash offset = blockChain.Tip.Hash;
+#pragma warning disable S3247
+                    if (blockChain.GetStates(new[] { agentAddress }, offset)[0] is Dictionary agentDict)
+#pragma warning restore S3247
                     {
                         AgentState agentState = new AgentState(agentDict);
                         Address deriveAddress = MonsterCollectionState.DeriveAddress(agentAddress, agentState.MonsterCollectionRound);
                         Currency currency = new GoldCurrencyState(
-                            (Dictionary) blockChain.GetState(Addresses.GoldCurrency, offset)
+                            (Dictionary)blockChain.GetStates(new[] { Addresses.GoldCurrency }, offset)[0]
                             ).Currency;
 
                         FungibleAssetValue balance = blockChain.GetBalance(agentAddress, currency, offset);
-                        if (blockChain.GetState(deriveAddress, offset) is Dictionary mcDict)
+                        if (blockChain.GetStates(new[] { deriveAddress }, offset)[0] is Dictionary mcDict)
                         {
                             var rewardSheet = new MonsterCollectionRewardSheet();
-                            var csv = blockChain.GetState(
-                                Addresses.GetSheetAddress<MonsterCollectionRewardSheet>(),
+                            var csv = blockChain.GetStates(
+                                new[] { Addresses.GetSheetAddress<MonsterCollectionRewardSheet>() },
                                 offset
-                            ).ToDotnetString();
+                            )[0].ToDotnetString();
                             rewardSheet.Set(csv);
                             var monsterCollectionState = new MonsterCollectionState(mcDict);
                             long tipIndex = blockChain.Tip.Index;
                             List<MonsterCollectionRewardSheet.RewardInfo> rewards =
                                 monsterCollectionState.CalculateRewards(rewardSheet, tipIndex);
                             return new MonsterCollectionStatus(
-                                balance, 
+                                balance,
                                 rewards,
                                 tipIndex,
                                 monsterCollectionState.IsLocked(tipIndex)
@@ -344,6 +356,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<BooleanGraphType>>(
                 name: "activated",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
@@ -352,7 +365,7 @@ namespace NineChronicles.Headless.GraphTypes
                 ),
                 resolve: context =>
                 {
-                    if (!(standaloneContext.BlockChain is BlockChain<NCAction> blockChain))
+                    if (!(standaloneContext.BlockChain is BlockChain blockChain))
                     {
                         throw new ExecutionError(
                             $"{nameof(StandaloneContext)}.{nameof(StandaloneContext.BlockChain)} was not set yet!");
@@ -378,6 +391,7 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<NonNullGraphType<StringGraphType>>(
                 name: "activationKeyNonce",
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
@@ -418,6 +432,42 @@ namespace NineChronicles.Headless.GraphTypes
                 description: "Query for rpc mode information.",
                 resolve: context => new RpcInformationQuery(publisher)
             );
+
+            Field<NonNullGraphType<ActionQuery>>(
+                name: "actionQuery",
+                description: "Query to create action transaction.",
+                resolve: context => new ActionQuery(standaloneContext));
+
+            Field<NonNullGraphType<ActionTxQuery>>(
+                name: "actionTxQuery",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "publicKey",
+                        Description = "The hexadecimal string of public key for Transaction.",
+                    },
+                    new QueryArgument<LongGraphType>
+                    {
+                        Name = "nonce",
+                        Description = "The nonce for Transaction.",
+                    },
+                    new QueryArgument<DateTimeOffsetGraphType>
+                    {
+                        Name = "timestamp",
+                        Description = "The time this transaction is created.",
+                    },
+                    new QueryArgument<FungibleAssetValueInputType>
+                    {
+                        Name = "maxGasPrice",
+                        DefaultValue = 1 * Currencies.Mead
+                    }
+                ),
+                resolve: context => new ActionTxQuery(standaloneContext));
+
+            Field<NonNullGraphType<AddressQuery>>(
+                name: "addressQuery",
+                description: "Query to get derived address.",
+                resolve: context => new AddressQuery(standaloneContext));
         }
     }
 }

@@ -17,7 +17,7 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
                 nameof(ItemBase.Id),
                 description: "ID from ItemSheet."
             );
-            
+
             Field<NonNullGraphType<ItemTypeEnumType>>(
                 nameof(ItemBase.ItemType),
                 description: "Item category.",
@@ -30,6 +30,18 @@ namespace NineChronicles.Headless.GraphTypes.States.Models.Item
             Field<NonNullGraphType<ElementalTypeEnumType>>(
                 nameof(ItemBase.ElementalType),
                 description: "Item elemental."
+            );
+            Field<LongGraphType>(
+                "requiredBlockIndex",
+                resolve: context =>
+                {
+                    if (context.Source is ITradableItem tradableItem)
+                    {
+                        return tradableItem.RequiredBlockIndex;
+                    }
+
+                    return null;
+                }
             );
         }
     }
