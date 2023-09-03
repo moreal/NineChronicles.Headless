@@ -1,6 +1,7 @@
 using System;
 using Bencodex.Types;
 using Libplanet.Action;
+using Libplanet.Action.State;
 
 namespace NineChronicles.Headless.Tests.Common.Actions
 {
@@ -12,7 +13,7 @@ namespace NineChronicles.Headless.Tests.Common.Actions
 
         public IAccountStateDelta Execute(IActionContext context)
         {
-            return context.PreviousStates;
+            return context.PreviousState;
         }
 
         public void Render(IActionContext context, IAccountStateDelta nextStates)

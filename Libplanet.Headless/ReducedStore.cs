@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Bencodex.Types;
-using Libplanet.Action;
-using Libplanet.Blocks;
+using Libplanet.Crypto;
 using Libplanet.Store;
-using Libplanet.Tx;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 
 namespace Libplanet.Headless
 {
     /// <summary>
-    /// A <see cref="IStore"> decorator that reduce space consumption by omitting input calls which
+    /// A <see cref="IStore"/> decorator that reduce space consumption by omitting input calls which
     /// are unused by Nine Chronicles.
     /// <para>Calls on this will be forwarded to its <see cref="InternalStore"/>, except for:</para>
     /// <list type="bullet">
@@ -41,17 +41,11 @@ namespace Libplanet.Headless
         public long CountIndex(Guid chainId) =>
             InternalStore.CountIndex(chainId);
 
-        public long CountTransactions() =>
-            InternalStore.CountTransactions();
-
         public bool DeleteBlock(BlockHash blockHash) =>
             InternalStore.DeleteBlock(blockHash);
 
         public void DeleteChainId(Guid chainId) =>
             InternalStore.DeleteChainId(chainId);
-
-        public bool DeleteTransaction(TxId txid) =>
-            InternalStore.DeleteTransaction(txid);
 
         public void ForkBlockIndexes(
             Guid sourceChainId,
@@ -63,9 +57,8 @@ namespace Libplanet.Headless
         public void ForkTxNonces(Guid sourceChainId, Guid destinationChainId) =>
             InternalStore.ForkTxNonces(sourceChainId, destinationChainId);
 
-        public Block<T> GetBlock<T>(HashAlgorithmGetter hashAlgorithmGetter, BlockHash blockHash)
-            where T : IAction, new() =>
-            InternalStore.GetBlock<T>(hashAlgorithmGetter, blockHash);
+        public Block GetBlock(BlockHash blockHash)
+            => InternalStore.GetBlock(blockHash);
 
         public BlockDigest? GetBlockDigest(BlockHash blockHash) =>
             InternalStore.GetBlockDigest(blockHash);
@@ -73,14 +66,11 @@ namespace Libplanet.Headless
         public long? GetBlockIndex(BlockHash blockHash) =>
             InternalStore.GetBlockIndex(blockHash);
 
-        public DateTimeOffset? GetBlockPerceivedTime(BlockHash blockHash) =>
-            InternalStore.GetBlockPerceivedTime(blockHash);
-
         public Guid? GetCanonicalChainId() =>
             InternalStore.GetCanonicalChainId();
 
-        public Transaction<T> GetTransaction<T>(TxId txid) where T : IAction, new() =>
-            InternalStore.GetTransaction<T>(txid);
+        public Transaction GetTransaction(TxId txid) =>
+            InternalStore.GetTransaction(txid);
 
         public TxExecution GetTxExecution(BlockHash blockHash, TxId txid) =>
             InternalStore.GetTxExecution(blockHash, txid);
@@ -104,19 +94,16 @@ namespace Libplanet.Headless
         ) =>
             InternalStore.IterateIndexes(chainId, offset, limit);
 
-        public IEnumerable<TxId> IterateTransactionIds() =>
-            InternalStore.IterateTransactionIds();
-
         public IEnumerable<Guid> ListChainIds() =>
             InternalStore.ListChainIds();
 
         public IEnumerable<KeyValuePair<Address, long>> ListTxNonces(Guid chainId) =>
             InternalStore.ListTxNonces(chainId);
 
-        public void PutBlock<T>(Block<T> block) where T : IAction, new() =>
+        public void PutBlock(Block block) =>
             InternalStore.PutBlock(block);
 
-        public void PutTransaction<T>(Transaction<T> tx) where T : IAction, new() =>
+        public void PutTransaction(Transaction tx) =>
             InternalStore.PutTransaction(tx);
 
         public void PutTxExecution(TxSuccess txSuccess)
@@ -125,7 +112,7 @@ namespace Libplanet.Headless
             TxSuccess reducedTxSuccess = new TxSuccess(
                 txSuccess.BlockHash,
                 txSuccess.TxId,
-                updatedStates: ImmutableDictionary<Address, IValue>.Empty,
+                updatedStates: txSuccess.UpdatedStates.ToImmutableDictionary(pair => pair.Key, _ => (IValue)Null.Value),
                 fungibleAssetsDelta: txSuccess.FungibleAssetsDelta,
                 updatedFungibleAssets: txSuccess.UpdatedFungibleAssets
             );
@@ -134,9 +121,6 @@ namespace Libplanet.Headless
 
         public void PutTxExecution(TxFailure txFailure) =>
             InternalStore.PutTxExecution(txFailure);
-
-        public void SetBlockPerceivedTime(BlockHash blockHash, DateTimeOffset perceivedTime) =>
-            InternalStore.SetBlockPerceivedTime(blockHash, perceivedTime);
 
         public void SetCanonicalChainId(Guid chainId) =>
             InternalStore.SetCanonicalChainId(chainId);
@@ -152,6 +136,27 @@ namespace Libplanet.Headless
 
         public void DeleteTxIdBlockHashIndex(TxId txId, BlockHash blockHash) =>
             InternalStore.DeleteTxIdBlockHashIndex(txId, blockHash);
+
+        public void PruneOutdatedChains(bool noopWithoutCanon = false) =>
+            InternalStore.PruneOutdatedChains(noopWithoutCanon);
+
+        public BlockCommit GetChainBlockCommit(Guid chainId) =>
+            InternalStore.GetChainBlockCommit(chainId);
+
+        public void PutChainBlockCommit(Guid chainId, BlockCommit blockCommit) =>
+            InternalStore.PutChainBlockCommit(chainId, blockCommit);
+
+        public BlockCommit GetBlockCommit(BlockHash blockHash) =>
+            InternalStore.GetBlockCommit(blockHash);
+
+        public void PutBlockCommit(BlockCommit blockCommit) =>
+            InternalStore.PutBlockCommit(blockCommit);
+
+        public void DeleteBlockCommit(BlockHash blockHash) =>
+            InternalStore.DeleteBlockCommit(blockHash);
+
+        public IEnumerable<BlockHash> GetBlockCommitHashes() =>
+            InternalStore.GetBlockCommitHashes();
 
         public void Dispose() => InternalStore.Dispose();
     }

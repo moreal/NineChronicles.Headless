@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using Libplanet;
-using Libplanet.Assets;
-using Libplanet.Blocks;
+using GraphQL.Execution;
+using Libplanet.Common;
 using Libplanet.Crypto;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
+using Libplanet.Types.Tx;
 using NineChronicles.Headless.GraphTypes;
 using Xunit;
 
@@ -22,7 +23,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             Random random = new Random();
             Address sender = new PrivateKey().ToAddress(),
                 recipient = new PrivateKey().ToAddress();
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             byte[] buffer = new byte[HashDigest<SHA256>.Size];
             random.NextBytes(buffer);
             BlockHash blockHash = new BlockHash(buffer);
@@ -33,6 +37,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var result = await GraphQLTestUtils.ExecuteQueryAsync<TransferNCGHistoryType>(
                 "{ blockHash txId sender recipient amount }",
                 source: new TransferNCGHistory(blockHash, txId, sender, recipient, amount, memo));
+            var data = (Dictionary<string, object>)((ExecutionNode)result.Data!).ToValue()!;
             Assert.Equal(new Dictionary<string, object>
             {
                 ["blockHash"] = blockHash.ToString(),
@@ -40,7 +45,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 ["sender"] = sender.ToString(),
                 ["recipient"] = recipient.ToString(),
                 ["amount"] = amount.GetQuantityString(),
-            }, result.Data);
+            }, data);
         }
     }
 }

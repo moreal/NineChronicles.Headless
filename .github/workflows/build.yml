@@ -4,27 +4,26 @@ on: [push, pull_request]
 
 jobs:
   build-and-tests:
+    name: "build-and-tests (${{ matrix.configuration }})"
     strategy:
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-20.04
           - windows-latest
+        configuration:
+          - Release
+          - DevEx
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 3.1.301
+          dotnet-version: 6.0.x
       - name: Install dependencies
         run: dotnet restore
       - name: Build and test
-        run: dotnet test --configuration Release --no-restore --verbosity normal
-
-  build-and-test:
-    needs: [build-and-tests]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo done
+        run: |
+          dotnet test --configuration ${{ matrix.configuration }} --no-restore

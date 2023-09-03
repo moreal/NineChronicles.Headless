@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Libplanet;
+using GraphQL.Execution;
+using Libplanet.Crypto;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
@@ -24,14 +25,15 @@ namespace NineChronicles.Headless.Tests.GraphTypes.States.Models
             Address address = default;
             CombinationSlotState combinationSlotState = new CombinationSlotState(address, 1);
             var queryResult = await ExecuteQueryAsync<CombinationSlotStateType>(query, source: combinationSlotState);
+            var data = (Dictionary<string, object>)((ExecutionNode)queryResult.Data!).ToValue()!;
             var expected = new Dictionary<string, object>()
             {
                 ["address"] = address.ToString(),
-                ["unlockBlockIndex"] = 0,
+                ["unlockBlockIndex"] = 0L,
                 ["unlockStage"] = 1,
-                ["startBlockIndex"] = 0,
+                ["startBlockIndex"] = 0L,
             };
-            Assert.Equal(expected, queryResult.Data);
+            Assert.Equal(expected, data);
         }
     }
 }

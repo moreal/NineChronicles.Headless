@@ -1,4 +1,11 @@
-using Lib9c.Renderer;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using Lib9c.Renderers;
+using Libplanet.Action.Loader;
 using Libplanet.Blockchain;
 using Libplanet.Blockchain.Policies;
 using Libplanet.Blockchain.Renderers;
@@ -8,34 +15,23 @@ using Libplanet.Headless.Hosting;
 using Libplanet.Net;
 using Libplanet.Store;
 using Microsoft.Extensions.Hosting;
-using Nekoyume.Action;
-using Nekoyume.BlockChain;
-using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.State;
+using Nekoyume.Blockchain;
+using Nekoyume.Blockchain.Policy;
 using NineChronicles.Headless.Properties;
+using NineChronicles.Headless.Utils;
 using NineChronicles.RPC.Shared.Exceptions;
 using Nito.AsyncEx;
 using Serilog;
 using Serilog.Events;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
-using StrictRenderer =
-    Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
-using Libplanet.Blocks;
-using Libplanet;
+using StrictRenderer = Libplanet.Blockchain.Renderers.Debug.ValidatingActionRenderer;
 
 namespace NineChronicles.Headless
 {
     public class NineChroniclesNodeService : IHostedService, IDisposable
     {
-        private LibplanetNodeService<NCAction> NodeService { get; set; }
+        private LibplanetNodeService NodeService { get; set; }
 
-        private LibplanetNodeServiceProperties<NCAction> Properties { get; }
+        private LibplanetNodeServiceProperties Properties { get; }
 
         public BlockRenderer BlockRenderer { get; }
 
@@ -49,9 +45,9 @@ namespace NineChronicles.Headless
 
         public AsyncManualResetEvent PreloadEnded => NodeService.PreloadEnded;
 
-        public Swarm<NCAction> Swarm => NodeService.Swarm;
+        public Swarm Swarm => NodeService.Swarm;
 
-        public BlockChain<NCAction> BlockChain => NodeService.BlockChain;
+        public BlockChain BlockChain => NodeService.BlockChain;
 
         public IStore Store => NodeService.Store;
 
@@ -72,18 +68,15 @@ namespace NineChronicles.Headless
 
         public NineChroniclesNodeService(
             PrivateKey? minerPrivateKey,
-            LibplanetNodeServiceProperties<NCAction> properties,
-            IBlockPolicy<NCAction> blockPolicy,
+            LibplanetNodeServiceProperties properties,
+            IBlockPolicy blockPolicy,
             NetworkType networkType,
-            Progress<PreloadState>? preloadProgress = null,
+            IActionLoader actionLoader,
+            Progress<BlockSyncState>? preloadProgress = null,
             bool ignoreBootstrapFailure = false,
             bool ignorePreloadFailure = false,
             bool strictRendering = false,
-            bool isDev = false,
-            int blockInterval = 10000,
-            int reorgInterval = 0,
             TimeSpan txLifeTime = default,
-            int minerCount = 1,
             int txQuotaPerSigner = 10
         )
         {
@@ -92,27 +85,20 @@ namespace NineChronicles.Headless
 
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            // Policies for dev mode.
-            IBlockPolicy<NCAction>? easyPolicy = null;
-            IBlockPolicy<NCAction>? hardPolicy = null;
-            IStagePolicy<NCAction> stagePolicy = new StagePolicy(txLifeTime, txQuotaPerSigner);
-            if (isDev)
-            {
-                easyPolicy = new ReorgPolicy(new RewardGold(), 1);
-                hardPolicy = new ReorgPolicy(new RewardGold(), 2);
-            }
+            IStagePolicy stagePolicy = new NCStagePolicy(txLifeTime, txQuotaPerSigner);
 
             BlockRenderer = blockPolicySource.BlockRenderer;
             ActionRenderer = blockPolicySource.ActionRenderer;
             ExceptionRenderer = new ExceptionRenderer();
             NodeStatusRenderer = new NodeStatusRenderer();
-            var renderers = new List<IRenderer<NCAction>>();
+            var renderers = new List<IRenderer>();
             var strictRenderer = new StrictRenderer(onError: exc =>
                 ExceptionRenderer.RenderException(
                     RPCException.InvalidRenderException,
                     exc.Message.Split("\n")[0]
                 )
             );
+
             if (Properties.Render)
             {
                 renderers.Add(blockPolicySource.BlockRenderer);
@@ -123,10 +109,9 @@ namespace NineChronicles.Headless
                 renderers.Add(blockPolicySource.BlockRenderer);
                 // The following "nullRenderer" does nothing.  It's just for filling
                 // the LoggedActionRenderer<T>() constructor's parameter:
-                IActionRenderer<NCAction> nullRenderer =
-                    new AnonymousActionRenderer<NCAction>();
+                IActionRenderer nullRenderer = new AnonymousActionRenderer();
                 renderers.Add(
-                    new LoggedActionRenderer<NCAction>(
+                    new LoggedActionRenderer(
                         nullRenderer,
                         Log.Logger,
                         logLevel
@@ -145,136 +130,25 @@ namespace NineChronicles.Headless
                 renderers.Add(strictRenderer);
             }
 
-            async Task minerLoopAction(
-                BlockChain<NCAction> chain,
-                Swarm<NCAction> swarm,
-                PrivateKey privateKey,
-                CancellationToken cancellationToken)
-            {
-                var miner = new Miner(chain, swarm, privateKey);
-                Log.Debug("Miner called.");
-                while (!cancellationToken.IsCancellationRequested)
+            NodeService = new LibplanetNodeService(
+                Properties,
+                blockPolicy,
+                stagePolicy,
+                renderers,
+                preloadProgress,
+                (code, msg) =>
                 {
-                    try
-                    {
-                        long nextBlockIndex = chain.Tip.Index + 1;
-
-                        if (swarm.Running)
-                        {
-                            Log.Debug("Start mining.");
-
-                            if (chain.Policy is BlockPolicy bp)
-                            {
-                                if (bp.IsAllowedToMine(privateKey.ToAddress(), chain.Count))
-                                {
-                                    IEnumerable<Task<Block<NCAction>>> miners = Enumerable
-                                        .Range(0, minerCount)
-                                        .Select(_ => miner.MineBlockAsync(cancellationToken));
-                                    await Task.WhenAll(miners);
-                                }
-                                else
-                                {
-                                    Log.Debug(
-                                        "Miner {MinerAddress} is not allowed to mine a block with index {Index} " +
-                                        "under current policy.",
-                                        privateKey.ToAddress(),
-                                        chain.Count);
-                                    await Task.Delay(1000, cancellationToken);
-                                }
-                            }
-                            else
-                            {
-                                Log.Error(
-                                    "No suitable policy was found for chain {ChainId}.",
-                                    chain.Id);
-                                await Task.Delay(1000, cancellationToken);
-                            }
-                        }
-                        else
-                        {
-                            await Task.Delay(1000, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception occurred.");
-                    }
-                }
-            }
-
-            async Task devMinerLoopAction(
-                Swarm<NCAction> mainSwarm,
-                Swarm<NCAction> subSwarm,
-                PrivateKey privateKey,
-                CancellationToken cancellationToken)
-            {
-                var miner = new ReorgMiner(mainSwarm, subSwarm, privateKey, reorgInterval);
-                Log.Debug("Miner called.");
-                while (!cancellationToken.IsCancellationRequested)
+                    ExceptionRenderer.RenderException(code, msg);
+                    Log.Error(msg);
+                },
+                isPreloadStarted =>
                 {
-                    try
-                    {
-                        if (mainSwarm.Running)
-                        {
-                            Log.Debug("Start mining.");
-                            await miner.MineBlockAsync(cancellationToken);
-                            await Task.Delay(blockInterval, cancellationToken);
-                        }
-                        else
-                        {
-                            await Task.Delay(1000, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception occurred.");
-                    }
-                }
-            }
-
-            if (isDev)
-            {
-                NodeService = new DevLibplanetNodeService<NCAction>(
-                    Properties,
-                    easyPolicy,
-                    hardPolicy,
-                    stagePolicy,
-                    renderers,
-                    devMinerLoopAction,
-                    preloadProgress,
-                    (code, msg) =>
-                    {
-                        ExceptionRenderer.RenderException(code, msg);
-                        Log.Error(msg);
-                    },
-                    isPreloadStarted => { NodeStatusRenderer.PreloadStatus(isPreloadStarted); },
-                    ignoreBootstrapFailure
-                );
-            }
-            else
-            {
-                NodeService = new LibplanetNodeService<NCAction>(
-                    Properties,
-                    blockPolicy,
-                    stagePolicy,
-                    renderers,
-                    minerLoopAction,
-                    preloadProgress,
-                    (code, msg) =>
-                    {
-                        ExceptionRenderer.RenderException(code, msg);
-                        Log.Error(msg);
-                    },
-                    isPreloadStarted =>
-                    {
-                        NodeStatusRenderer.PreloadStatus(isPreloadStarted);
-                    },
-                    ignoreBootstrapFailure,
-                    ignorePreloadFailure
-                );
-            }
-
-            strictRenderer.BlockChain = NodeService.BlockChain ?? throw new Exception("BlockChain is null.");
+                    NodeStatusRenderer.PreloadStatus(isPreloadStarted);
+                },
+                actionLoader,
+                ignoreBootstrapFailure,
+                ignorePreloadFailure
+            );
         }
 
         public static NineChroniclesNodeService Create(
@@ -287,7 +161,7 @@ namespace NineChronicles.Headless
                 throw new ArgumentNullException(nameof(context));
             }
 
-            Progress<PreloadState> progress = new Progress<PreloadState>(state =>
+            Progress<BlockSyncState> progress = new Progress<BlockSyncState>(state =>
             {
                 context.PreloadStateSubject.OnNext(state);
             });
@@ -298,14 +172,11 @@ namespace NineChronicles.Headless
             }
 
             properties.Libplanet.DifferentAppProtocolVersionEncountered =
-                (Peer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
+                (BoundPeer peer, AppProtocolVersion peerVersion, AppProtocolVersion localVersion) =>
                 {
                     context.DifferentAppProtocolVersionEncounterSubject.OnNext(
                         new DifferentAppProtocolVersionEncounter(peer, peerVersion, localVersion)
                     );
-
-                    // FIXME: 일단은 버전이 다른 피어는 마주쳐도 쌩깐다.
-                    return false;
                 };
 
             properties.Libplanet.NodeExceptionOccurred =
@@ -316,55 +187,80 @@ namespace NineChronicles.Headless
                     );
                 };
 
-            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(properties.NetworkType);
+            var blockPolicy = NineChroniclesNodeService.GetBlockPolicy(
+                properties.NetworkType,
+                properties.ActionLoader);
             var service = new NineChroniclesNodeService(
                 properties.MinerPrivateKey,
                 properties.Libplanet,
                 blockPolicy,
                 properties.NetworkType,
+                properties.ActionLoader,
                 preloadProgress: progress,
                 ignoreBootstrapFailure: properties.IgnoreBootstrapFailure,
                 ignorePreloadFailure: properties.IgnorePreloadFailure,
                 strictRendering: properties.StrictRender,
-                isDev: properties.Dev,
-                blockInterval: properties.BlockInterval,
-                reorgInterval: properties.ReorgInterval,
                 txLifeTime: properties.TxLifeTime,
-                minerCount: properties.MinerCount,
                 txQuotaPerSigner: properties.TxQuotaPerSigner
             );
             service.ConfigureContext(context);
+            var meter = new Meter("NineChronicles");
+            meter.CreateObservableGauge(
+                "ninechronicles_tip_index",
+                () => service.BlockChain.Tip.Index,
+                description: "The tip block's index.");
+            meter.CreateObservableGauge(
+                "ninechronicles_staged_txids_count",
+                () => service.BlockChain.GetStagedTransactionIds().Count,
+                description: "Number of staged transactions.");
+            meter.CreateObservableGauge(
+                "ninechronicles_subscriber_addresses_count",
+                () => context.AgentAddresses.Count);
+            meter.CreateObservableGauge(
+                "ninechronicles_tx_count",
+                () => service.BlockChain.Tip.Transactions.Count,
+                description: "The count of the tip block's transactions.");
+            meter.CreateObservableGauge(
+                "ninechronicles_block_interval",
+                () =>
+                {
+                    var currentBlockHash = service.BlockChain.Tip.Hash;
+                    var nullablePreviousBlockHash = service.BlockChain[currentBlockHash].PreviousHash;
+                    if (nullablePreviousBlockHash is { } previousBlockHash)
+                    {
+                        return (service.BlockChain[currentBlockHash].Timestamp -
+                                service.BlockChain[previousBlockHash].Timestamp).TotalSeconds;
+                    }
+
+                    // When the tip is genesis block...
+                    return 0;
+                },
+                description: "The block interval between tip block and tip - 1 block.");
+
             return service;
         }
 
-        internal static IBlockPolicy<NCAction> GetBlockPolicy(NetworkType networkType)
+        internal static IBlockPolicy GetBlockPolicy(NetworkType networkType, IActionLoader actionLoader)
         {
-            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug);
+            var source = new BlockPolicySource(Log.Logger, LogEventLevel.Debug, actionLoader);
             return networkType switch
             {
                 NetworkType.Main => source.GetPolicy(),
                 NetworkType.Internal => source.GetInternalPolicy(),
+                NetworkType.Permanent => source.GetPermanentPolicy(),
                 NetworkType.Test => source.GetTestPolicy(),
+                NetworkType.Default => source.GetDefaultPolicy(),
                 _ => throw new ArgumentOutOfRangeException(nameof(networkType), networkType, null),
             };
         }
 
-        internal static IBlockPolicy<NCAction> GetTestBlockPolicy() =>
+        internal static IBlockPolicy GetTestBlockPolicy() =>
             new BlockPolicySource(Log.Logger, LogEventLevel.Debug).GetTestPolicy();
-
-        public void StartMining() => NodeService?.StartMining(MinerPrivateKey);
-
-        public void StopMining() => NodeService?.StopMining();
 
         public Task<bool> CheckPeer(string addr) => NodeService?.CheckPeer(addr) ?? throw new InvalidOperationException();
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!Properties.NoMiner)
-            {
-                StartMining();
-            }
-
             return NodeService.StartAsync(cancellationToken);
         }
 
@@ -380,6 +276,11 @@ namespace NineChronicles.Headless
             standaloneContext.NineChroniclesNodeService = this;
             standaloneContext.BlockChain = Swarm.BlockChain;
             standaloneContext.Store = Store;
+            standaloneContext.Swarm = Swarm;
+            standaloneContext.CurrencyFactory =
+                new CurrencyFactory(standaloneContext.BlockChain.GetBlockState);
+            standaloneContext.FungibleAssetValueFactory =
+                new FungibleAssetValueFactory(standaloneContext.CurrencyFactory);
             BootstrapEnded.WaitAsync().ContinueWith((task) =>
             {
                 standaloneContext.BootstrapEnded = true;

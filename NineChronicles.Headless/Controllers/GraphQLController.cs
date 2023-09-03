@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
-using Libplanet;
+using Libplanet.Common;
 using Libplanet.KeyStore;
 using Microsoft.AspNetCore.Mvc;
 using Nekoyume;
@@ -14,12 +14,10 @@ using Nekoyume.Model.State;
 using Libplanet.Crypto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Nekoyume.Model.Item;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Requests;
 using Serilog;
-
+using Lib9c.Renderers;
 
 namespace NineChronicles.Headless.Controllers
 {
@@ -81,6 +79,7 @@ namespace NineChronicles.Headless.Controllers
             }
         }
 
+        // Should deprecate this endpoint after release v200000.
         [HttpPost(SetMiningEndpoint)]
         public IActionResult SetMining([FromBody] SetMiningRequest request)
         {
@@ -95,18 +94,9 @@ namespace NineChronicles.Headless.Controllers
                 return new StatusCodeResult(StatusCodes.Status409Conflict);
             }
 
-            bool mine = request.Mine;
-            if (mine)
-            {
-                StandaloneContext.NineChroniclesNodeService.StartMining();
-            }
-            else
-            {
-                StandaloneContext.NineChroniclesNodeService.StopMining();
-            }
+            StandaloneContext.IsMining = request.Mine;
 
-            StandaloneContext.IsMining = mine;
-            return Ok($"Set mining status to {mine}.");
+            return Ok();
         }
 
         [HttpPost(CheckPeerEndpoint)]
@@ -129,7 +119,7 @@ namespace NineChronicles.Headless.Controllers
                 {
                     return Ok($"Found peer {request.AddressString}.");
                 }
-                
+
                 return BadRequest($"No such peer {request.AddressString}");
             }
             catch (Exception e)
@@ -187,12 +177,12 @@ namespace NineChronicles.Headless.Controllers
             }
 
             var agentStates =
-                states.Select(state => new AgentState((Bencodex.Types.Dictionary) state));
+                states.Select(state => new AgentState((Bencodex.Types.Dictionary)state));
             var avatarStates = agentStates.SelectMany(agentState =>
                 agentState.avatarAddresses.Values.Select(address =>
-                    new AvatarState((Bencodex.Types.Dictionary) chain.GetState(address))));
+                    new AvatarState((Bencodex.Types.Dictionary)chain.GetState(address))));
             var gameConfigState =
-                new GameConfigState((Bencodex.Types.Dictionary) chain.GetState(Addresses.GameConfig));
+                new GameConfigState((Bencodex.Types.Dictionary)chain.GetState(Addresses.GameConfig));
 
             bool IsDailyRewardRefilled(long dailyRewardReceivedIndex)
             {
@@ -229,7 +219,7 @@ namespace NineChronicles.Headless.Controllers
             }
         }
 
-        private void NotifyAction(ActionBase.ActionEvaluation<ActionBase> eval)
+        private void NotifyAction(ActionEvaluation<ActionBase> eval)
         {
             if (StandaloneContext.NineChroniclesNodeService is null)
             {
@@ -243,7 +233,7 @@ namespace NineChronicles.Headless.Controllers
                 return;
             }
             Address address = StandaloneContext.NineChroniclesNodeService.MinerPrivateKey.PublicKey.ToAddress();
-            if (eval.OutputStates.UpdatedAddresses.Contains(address) || eval.Signer == address)
+            if (eval.OutputState.Delta.UpdatedAddresses.Contains(address) || eval.Signer == address)
             {
                 if (eval.Signer == address)
                 {
@@ -282,6 +272,6 @@ namespace NineChronicles.Headless.Controllers
 
         // FIXME: remove this method with DI.
         private bool HasLocalPolicy() => !(_configuration[GraphQLService.SecretTokenKey] is { }) ||
-                                         _httpContextAccessor.HttpContext.User.HasClaim("role", "Admin");
+                                         (_httpContextAccessor.HttpContext?.User.HasClaim("role", "Admin") ?? false);
     }
 }

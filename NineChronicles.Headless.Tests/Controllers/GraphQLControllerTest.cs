@@ -1,28 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Libplanet.Net;
-using Libplanet.Store;
-using Libplanet.Store.Trie;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Nekoyume.Action;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Controllers;
 using NineChronicles.Headless.GraphTypes;
 using NineChronicles.Headless.Properties;
 using NineChronicles.Headless.Requests;
+using NineChronicles.Headless.Tests.Common;
 using Xunit;
+using static NineChronicles.Headless.Tests.GraphQLTestUtils;
 using IPAddress = System.Net.IPAddress;
 
 namespace NineChronicles.Headless.Tests.Controllers
@@ -36,22 +32,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         public GraphQLControllerTest()
         {
-            var store = new DefaultStore(null);
-            var stateStore = new TrieStateStore(new DefaultKeyValueStore(null));
-            var genesisBlock = BlockChain<PolymorphicAction<ActionBase>>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
-            var blockchain = new BlockChain<PolymorphicAction<ActionBase>>(
-                new BlockPolicy<PolymorphicAction<ActionBase>>(),
-                new VolatileStagePolicy<PolymorphicAction<ActionBase>>(),
-                store,
-                stateStore,
-                genesisBlock);
-            _standaloneContext = new StandaloneContext
-            {
-                BlockChain = blockchain,
-                Store = store,
-            };
+            _standaloneContext = CreateStandaloneContext();
             _configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             _httpContextAccessor = new HttpContextAccessor();
             _httpContextAccessor.HttpContext = new DefaultHttpContext();
@@ -73,7 +54,7 @@ namespace NineChronicles.Headless.Tests.Controllers
             }
 
             ConfigureNineChroniclesNodeService();
-            Assert.IsType<OkObjectResult>(_controller.SetMining(new SetMiningRequest
+            Assert.IsType<OkResult>(_controller.SetMining(new SetMiningRequest
             {
                 Mine = mine,
             }));
@@ -154,8 +135,9 @@ namespace NineChronicles.Headless.Tests.Controllers
             var address = new PrivateKey().ToAddress();
             if (exist)
             {
-                _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>());
+                _standaloneContext.AgentAddresses[address] = (new ReplaySubject<MonsterCollectionStatus>(), new ReplaySubject<MonsterCollectionState>(), new ReplaySubject<string>());
             }
+
             Assert.Equal(exist, _standaloneContext.AgentAddresses.Any());
             _controller.RemoveSubscribe(new AddressRequest
             {
@@ -173,7 +155,7 @@ namespace NineChronicles.Headless.Tests.Controllers
 
         private void ConfigureAdminClaim()
         {
-            _httpContextAccessor.HttpContext.User.AddIdentity(new ClaimsIdentity(new[]
+            _httpContextAccessor.HttpContext!.User.AddIdentity(new ClaimsIdentity(new[]
             {
                 new Claim("role", "Admin"),
             }));
@@ -183,16 +165,18 @@ namespace NineChronicles.Headless.Tests.Controllers
         {
             _standaloneContext.NineChroniclesNodeService = new NineChroniclesNodeService(
                 new PrivateKey(),
-                new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+                new LibplanetNodeServiceProperties
                 {
                     GenesisBlock = _standaloneContext.BlockChain!.Genesis,
                     StorePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()),
                     AppProtocolVersion = AppProtocolVersion.Sign(new PrivateKey(), 0),
                     SwarmPrivateKey = new PrivateKey(),
                     Host = IPAddress.Loopback.ToString(),
+                    IceServers = new List<IceServer>(),
                 },
-                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test),
-                NetworkType.Test);
+                NineChroniclesNodeService.GetBlockPolicy(NetworkType.Test, StaticActionLoaderSingleton.Instance),
+                NetworkType.Test,
+                StaticActionLoaderSingleton.Instance);
         }
     }
 }

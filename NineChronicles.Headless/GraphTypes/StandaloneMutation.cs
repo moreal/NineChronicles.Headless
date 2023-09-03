@@ -1,19 +1,18 @@
 using Bencodex.Types;
 using GraphQL;
-using GraphQL.Server.Authorization.AspNetCore;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action;
 using Libplanet.Blockchain;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Explorer.GraphTypes;
-using Libplanet.Tx;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Tx;
 using Microsoft.Extensions.Configuration;
 using Nekoyume.Action;
 using Nekoyume.Model.State;
 using Serilog;
 using System;
-using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
 namespace NineChronicles.Headless.GraphTypes
 {
@@ -32,11 +31,13 @@ namespace NineChronicles.Headless.GraphTypes
 
             Field<KeyStoreMutation>(
                 name: "keyStore",
+                deprecationReason: "Use `planet key` command instead.  https://www.npmjs.com/package/@planetarium/cli",
                 resolve: context => standaloneContext.KeyStore);
 
             Field<ActivationStatusMutation>(
                 name: "activationStatus",
-                resolve: _ => new ActivationStatusMutation(nodeService));
+                resolve: _ => new ActivationStatusMutation(nodeService),
+                deprecationReason: "Since NCIP-15, it doesn't care account activation.");
 
             Field<ActionMutation>(
                 name: "action",
@@ -57,9 +58,9 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
-                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+                        BlockChain? blockChain = service?.Swarm.BlockChain;
 
                         if (blockChain is null)
                         {
@@ -90,9 +91,9 @@ namespace NineChronicles.Headless.GraphTypes
                 }
             );
 
-            // TODO deprecate stageTx and use this.
             Field<NonNullGraphType<TxIdType>>(
                 name: "stageTxV2",
+                deprecationReason: "API update with action query. use stageTransaction mutation",
                 description: "Add a new transaction to staging and return TxId",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>>
@@ -106,16 +107,17 @@ namespace NineChronicles.Headless.GraphTypes
                     try
                     {
                         byte[] bytes = Convert.FromBase64String(context.GetArgument<string>("payload"));
-                        Transaction<NCAction> tx = Transaction<NCAction>.Deserialize(bytes);
+                        Transaction tx = Transaction.Deserialize(bytes);
                         NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
-                        BlockChain<NCAction>? blockChain = service?.Swarm.BlockChain;
+                        BlockChain? blockChain = service?.Swarm.BlockChain;
 
                         if (blockChain is null)
                         {
                             throw new InvalidOperationException($"{nameof(blockChain)} is null.");
                         }
 
-                        if (blockChain.Policy.ValidateNextBlockTx(blockChain, tx) is null)
+                        Exception? validationExc = blockChain.Policy.ValidateNextBlockTx(blockChain, tx);
+                        if (validationExc is null)
                         {
                             blockChain.StageTransaction(tx);
 
@@ -127,14 +129,15 @@ namespace NineChronicles.Headless.GraphTypes
                             return tx.Id;
                         }
 
-                        context.Errors.Add(new ExecutionError("The given transaction is invalid."));
+                        throw new ExecutionError(
+                            $"The given transaction is invalid. (due to: {validationExc.Message})",
+                            validationExc
+                        );
                     }
                     catch (Exception e)
                     {
-                        context.Errors.Add(new ExecutionError("An unexpected exception occurred.", e));
+                        throw new ExecutionError("An unexpected exception occurred.", e);
                     }
-
-                    return null;
                 }
             );
 
@@ -186,7 +189,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return null;
                     }
 
-                    BlockChain<NCAction> blockChain = service.BlockChain;
+                    BlockChain blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(new Address(context.GetArgument<string>("currencyAddress")))
                     ).Currency;
@@ -195,11 +198,11 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address recipient = context.GetArgument<Address>("recipient");
                     string? memo = context.GetArgument<string?>("memo");
-                    Transaction<NCAction> tx = Transaction<NCAction>.Create(
+                    Transaction tx = Transaction.Create(
                         context.GetArgument<long>("txNonce"),
                         privateKey,
                         blockChain.Genesis.Hash,
-                        new NCAction[]
+                        new ActionBase[]
                         {
                             new TransferAsset(
                                 privateKey.ToAddress(),
@@ -207,7 +210,7 @@ namespace NineChronicles.Headless.GraphTypes
                                 amount,
                                 memo
                             ),
-                        }
+                        }.ToPlainValues()
                     );
                     blockChain.StageTransaction(tx);
                     return tx.Id;
@@ -244,7 +247,7 @@ namespace NineChronicles.Headless.GraphTypes
                         return null;
                     }
 
-                    BlockChain<NCAction> blockChain = service.BlockChain;
+                    BlockChain blockChain = service.BlockChain;
                     var currency = new GoldCurrencyState(
                         (Dictionary)blockChain.GetState(GoldCurrencyState.Address)
                     ).Currency;
@@ -253,9 +256,9 @@ namespace NineChronicles.Headless.GraphTypes
 
                     Address recipient = context.GetArgument<Address>("recipient");
 
-                    Transaction<NCAction> tx = blockChain.MakeTransaction(
+                    Transaction tx = blockChain.MakeTransaction(
                         privateKey,
-                        new NCAction[]
+                        new ActionBase[]
                         {
                             new TransferAsset(
                                 privateKey.ToAddress(),
@@ -265,6 +268,55 @@ namespace NineChronicles.Headless.GraphTypes
                         }
                     );
                     return tx.Id;
+                }
+            );
+
+            Field<NonNullGraphType<TxIdType>>(
+                name: "stageTransaction",
+                description: "Add a new transaction to staging and return TxId",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "payload",
+                        Description = "The hexadecimal string of the transaction to stage."
+                    }
+                ),
+                resolve: context =>
+                {
+                    try
+                    {
+                        byte[] bytes = ByteUtil.ParseHex(context.GetArgument<string>("payload"));
+                        Transaction tx = Transaction.Deserialize(bytes);
+                        NineChroniclesNodeService? service = standaloneContext.NineChroniclesNodeService;
+                        BlockChain? blockChain = service?.Swarm.BlockChain;
+
+                        if (blockChain is null)
+                        {
+                            throw new InvalidOperationException($"{nameof(blockChain)} is null.");
+                        }
+
+                        Exception? validationExc = blockChain.Policy.ValidateNextBlockTx(blockChain, tx);
+                        if (validationExc is null)
+                        {
+                            blockChain.StageTransaction(tx);
+
+                            if (service?.Swarm is { } swarm && swarm.Running)
+                            {
+                                swarm.BroadcastTxs(new[] { tx });
+                            }
+
+                            return tx.Id;
+                        }
+
+                        throw new ExecutionError(
+                            $"The given transaction is invalid. (due to: {validationExc.Message})",
+                            validationExc
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"An unexpected exception occurred. {e.Message}");
+                    }
                 }
             );
         }

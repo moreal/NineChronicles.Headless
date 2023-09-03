@@ -1,28 +1,15 @@
 using Libplanet.Action;
 using Libplanet.Blockchain.Renderers;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 
 namespace NineChronicles.Headless.Tests.GraphTypes
 {
-    public class DummyRenderer<T> : IRenderer<T>
-        where T : IAction, new()
+    public class DummyRenderer : IRenderer
     {
         public void RenderBlock(
-            Block<T> oldTip,
-            Block<T> newTip
+            Block oldTip,
+            Block newTip
         )
-        {
-        }
-
-        public void RenderReorg(
-            Block<T> oldTip,
-            Block<T> newTip,
-            Block<T> branchpoint
-        )
-        {
-        }
-
-        public void RenderReorgEnd(Block<T> oldTip, Block<T> newTip, Block<T> branchpoint)
         {
         }
     }

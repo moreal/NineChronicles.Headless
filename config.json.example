@@ -1,0 +1,30 @@
+{
+    "data": {
+        "tablePath": "Lib9c/Lib9c/TableCSV"
+    },
+    "currency": {
+        "initialMinter": "",
+        "initialCurrencyDeposit": [
+            {
+                "address": "",
+                "amount": 100000,
+                "start": 0,
+                "end": 0
+            }
+        ]
+    },
+    "admin": {
+        "activate": false,
+        "address": "",
+        "validUntil": 10000
+    },
+    "initialValidatorSet": [
+        {
+            "publicKey": "",
+            "power": 1
+        }
+    ],
+    "extra": {
+        "pendingActivationStatePath": "PendingActivation"
+    }
+}

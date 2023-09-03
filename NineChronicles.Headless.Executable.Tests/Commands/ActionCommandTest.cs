@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using Bencodex;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Nekoyume.Action;
+using Nekoyume.Action.Factory;
 using Nekoyume.Model;
 using Nekoyume.Model.State;
 using NineChronicles.Headless.Executable.Commands;
@@ -35,7 +35,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var nonce = new byte[] { 0x00, 0x01, 0x02, 0x03 };
             var privateKey = new PrivateKey();
             (ActivationKey activationKey, PendingActivationState _) = ActivationKey.Create(privateKey, nonce);
-            string invitationCode =  invalid ? "invalid_code" : activationKey.Encode();
+            string invitationCode = invalid ? "invalid_code" : activationKey.Encode();
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var resultCode = _command.ActivateAccount(invitationCode, ByteUtil.Hex(nonce), filePath);
             Assert.Equal(expectedCode, resultCode);
@@ -90,7 +90,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
                 var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
                 var decoded = (List)_codec.Decode(rawAction);
                 string type = (Text)decoded[0];
-                Assert.Equal(nameof(Nekoyume.Action.ClaimMonsterCollectionReward), type);
+                Assert.Equal(nameof(ClaimMonsterCollectionReward), type);
 
                 Dictionary plainValue = (Dictionary)decoded[1];
                 var action = new ClaimMonsterCollectionReward();
@@ -99,7 +99,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
             }
         }
 
@@ -116,7 +116,7 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             var recipientPrivateKey = new PrivateKey();
             var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             var resultCode = _command.TransferAsset(
-                senderPrivateKey.ToAddress().ToHex(), 
+                senderPrivateKey.ToAddress().ToHex(),
                 recipientPrivateKey.ToAddress().ToHex(),
                 Convert.ToString(amount),
                 filePath,
@@ -139,7 +139,143 @@ namespace NineChronicles.Headless.Executable.Tests.Commands
             }
             else
             {
-                Assert.Contains("System.FormatException: Could not find any recognizable digits.", _console.Error.ToString());
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
+            }
+        }
+
+        [Fact]
+        public void Stake()
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var resultCode = _command.Stake(1, filePath);
+            Assert.Equal(0, resultCode);
+            var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+            var decoded = (List)_codec.Decode(rawAction);
+            string type = (Text)decoded[0];
+            Assert.Equal(nameof(Nekoyume.Action.Stake), type);
+
+            var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+            var action = new Stake();
+            action.LoadPlainValue(plainValue);
+        }
+
+        [Theory]
+        [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
+        [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]
+        public void ClaimStakeReward(string addressString, int expectedCode)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var resultCode = _command.ClaimStakeReward(addressString, filePath);
+            Assert.Equal(expectedCode, resultCode);
+
+            if (resultCode == 0)
+            {
+                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                string type = (Text)decoded[0];
+                Assert.Equal(nameof(Nekoyume.Action.ClaimStakeReward), type);
+
+                var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+                var action = new ClaimStakeReward();
+                action.LoadPlainValue(plainValue);
+            }
+            else
+            {
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
+            }
+        }
+
+        [Theory]
+        [InlineData(0L, typeof(ClaimStakeReward2))]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex, typeof(ClaimStakeReward2))]
+        [InlineData(ClaimStakeReward2.ObsoletedIndex + 1, typeof(ClaimStakeReward3))]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex, typeof(ClaimStakeReward3))]
+        [InlineData(ClaimStakeReward3.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward4))]
+        [InlineData(ClaimStakeReward4.ObsoleteBlockIndex, typeof(ClaimStakeReward4))]
+        [InlineData(ClaimStakeReward4.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward5))]
+        [InlineData(ClaimStakeReward5.ObsoleteBlockIndex, typeof(ClaimStakeReward5))]
+        [InlineData(ClaimStakeReward5.ObsoleteBlockIndex + 1, typeof(ClaimStakeReward))]
+        [InlineData(long.MaxValue, typeof(ClaimStakeReward))]
+        public void ClaimStakeRewardWithBlockIndex(long blockIndex, Type expectedActionType)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var addr = new PrivateKey().ToAddress();
+            var resultCode = _command.ClaimStakeReward(
+                addr.ToHex(),
+                filePath,
+                blockIndex: blockIndex);
+            Assert.Equal(0, resultCode);
+
+            var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+            var decoded = (List)_codec.Decode(rawAction);
+            var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+            var action = ClaimStakeRewardFactory.CreateByBlockIndex(blockIndex, addr);
+            Assert.NotNull(action);
+            var actionType = action.GetType();
+            Assert.Equal(expectedActionType, actionType);
+            action.LoadPlainValue(plainValue);
+            string type = (Text)decoded[0];
+            Assert.Equal(type, actionType.Name);
+        }
+
+        [Theory]
+        [InlineData(0, 0, -1)]
+        [InlineData(1, 6, 0)]
+        [InlineData(7, 7, -1)]
+        public void ClaimStakeRewardWithActionVersion(
+            int actionVersionMin,
+            int actionVersionMax,
+            int expectedCode)
+        {
+            for (var i = actionVersionMin; i < actionVersionMax + 1; i++)
+            {
+                var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+                var addr = new PrivateKey().ToAddress();
+                var resultCode = _command.ClaimStakeReward(
+                    addr.ToHex(),
+                    filePath,
+                    actionVersion: i);
+                Assert.Equal(expectedCode, resultCode);
+
+                if (expectedCode < 0)
+                {
+                    continue;
+                }
+
+                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+                var action = ClaimStakeRewardFactory.CreateByVersion(i, addr);
+                action.LoadPlainValue(plainValue);
+                string type = (Text)decoded[0];
+                Assert.Equal(action.GetType().Name, type);
+            }
+        }
+
+        [Theory]
+        [InlineData("0xab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", -1)]
+        [InlineData("ab1dce17dCE1Db1424BB833Af6cC087cd4F5CB6d", 0)]
+        public void MigrateMonsterCollection(string addressString, int expectedCode)
+        {
+            var filePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+            var resultCode = _command.MigrateMonsterCollection(addressString, filePath);
+            Assert.Equal(expectedCode, resultCode);
+
+            if (resultCode == 0)
+            {
+                var rawAction = Convert.FromBase64String(File.ReadAllText(filePath));
+                var decoded = (List)_codec.Decode(rawAction);
+                string type = (Text)decoded[0];
+                Assert.Equal(nameof(Nekoyume.Action.MigrateMonsterCollection), type);
+
+                var plainValue = Assert.IsType<Dictionary>(decoded[1]);
+                var action = new MigrateMonsterCollection();
+                action.LoadPlainValue(plainValue);
+                Assert.Equal(addressString, action.AvatarAddress.ToHex());
+            }
+            else
+            {
+                Assert.Contains("System.FormatException: Input string was not in a correct format.", _console.Error.ToString());
             }
         }
     }
