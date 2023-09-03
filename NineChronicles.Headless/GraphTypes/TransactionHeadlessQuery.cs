@@ -75,7 +75,9 @@ namespace NineChronicles.Headless.GraphTypes
                     new QueryArgument<NonNullGraphType<LongGraphType>>
                     { Name = "limit", Description = "number of block to query." },
                     new QueryArgument<NonNullGraphType<StringGraphType>>
-                    { Name = "actionType", Description = "filter tx by having actions' type" }
+                    { Name = "actionType", Description = "filter tx by having actions' type" },
+                    new QueryArgument<StringGraphType>
+                    { Name = "actionTypeGlobPattern", Description = "filter tx by having actions' type using glob pattern" }
                 ),
                 resolve: context =>
                 {
@@ -88,7 +90,8 @@ namespace NineChronicles.Headless.GraphTypes
                     var startingBlockIndex = context.GetArgument<long>("startingBlockIndex");
                     var limit = context.GetArgument<long>("limit");
                     var actionType = context.GetArgument<string>("actionType");
-
+                    var actionTypeGlobPattern = context.GetArgument<string>("actionTypeGlobPattern");
+                    
                     var blocks = ListBlocks(blockChain, startingBlockIndex, limit);
                     var transactions = blocks
                         .SelectMany(block => block.Transactions)
@@ -98,8 +101,8 @@ namespace NineChronicles.Headless.GraphTypes
                             {
                                 return false;
                             }
-
-                            return typeId == actionType;
+                    
+                            return typeId == actionType || typeId.Matches(actionTypeGlobPattern);
                         }));
 
                     return transactions;
