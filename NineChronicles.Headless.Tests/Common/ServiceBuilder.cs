@@ -1,10 +1,8 @@
 using System;
-using Libplanet.Action;
-using Libplanet.Blocks;
+using Libplanet.Types.Blocks;
 using Libplanet.Crypto;
 using Libplanet.Net;
 using Libplanet.Headless.Hosting;
-using Nekoyume.Action;
 using System.Collections.Immutable;
 using System.IO;
 using Libplanet.Blockchain.Policies;
@@ -18,16 +16,16 @@ namespace NineChronicles.Headless.Tests.Common
 
         public const int MaximumTransactions = 100;
 
-        public static IBlockPolicy<PolymorphicAction<ActionBase>> BlockPolicy =>
+        public static IBlockPolicy BlockPolicy =>
             NineChroniclesNodeService.GetTestBlockPolicy();
 
         public static NineChroniclesNodeService CreateNineChroniclesNodeService(
-            Block<PolymorphicAction<ActionBase>> genesis,
+            Block genesis,
             PrivateKey? privateKey = null
         )
         {
             var storePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            var properties = new LibplanetNodeServiceProperties<PolymorphicAction<ActionBase>>
+            var properties = new LibplanetNodeServiceProperties
             {
                 Host = System.Net.IPAddress.Loopback.ToString(),
                 AppProtocolVersion = default,
@@ -35,18 +33,27 @@ namespace NineChronicles.Headless.Tests.Common
                 StorePath = storePath,
                 StoreStatesCacheSize = 2,
                 SwarmPrivateKey = new PrivateKey(),
+                ConsensusPrivateKey = privateKey,
                 Port = null,
+                ConsensusPort = null,
                 NoMiner = true,
                 Render = false,
                 LogActionRenders = false,
-                Peers = ImmutableHashSet<Peer>.Empty,
+                Peers = ImmutableHashSet<BoundPeer>.Empty,
                 TrustedAppProtocolVersionSigners = null,
                 MessageTimeout = TimeSpan.FromMinutes(1),
                 TipTimeout = TimeSpan.FromMinutes(1),
                 DemandBuffer = 1150,
-                StaticPeers = ImmutableHashSet<BoundPeer>.Empty,
+                ConsensusSeeds = ImmutableList<BoundPeer>.Empty,
+                ConsensusPeers = ImmutableList<BoundPeer>.Empty,
+                IceServers = ImmutableList<IceServer>.Empty,
             };
-            return new NineChroniclesNodeService(privateKey, properties, BlockPolicy, NetworkType.Test);
+            return new NineChroniclesNodeService(
+                privateKey,
+                properties,
+                BlockPolicy,
+                NetworkType.Test,
+                StaticActionLoaderSingleton.Instance);
         }
     }
 }

@@ -1,7 +1,7 @@
 using GraphQL.Language.AST;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Tx;
+using Libplanet.Common;
+using Libplanet.Types.Tx;
 using System;
 
 namespace NineChronicles.Headless.GraphTypes
@@ -13,7 +13,7 @@ namespace NineChronicles.Headless.GraphTypes
             Name = "TxId";
         }
 
-        public override object Serialize(object value)
+        public override object? Serialize(object? value)
         {
             if (value is TxId txId)
             {
@@ -23,7 +23,7 @@ namespace NineChronicles.Headless.GraphTypes
             return value;
         }
 
-        public override object? ParseValue(object value)
+        public override object? ParseValue(object? value)
         {
             switch (value)
             {

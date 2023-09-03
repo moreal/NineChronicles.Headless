@@ -2,23 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
+using System.Numerics;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL;
+using GraphQL.Execution;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Subscription;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Common;
+using Libplanet.Action;
+using Libplanet.Action.Loader;
+using Libplanet.Action.Sys;
+using Libplanet.Types.Assets;
+using Libplanet.Types.Blocks;
 using Libplanet.Blockchain;
+using Libplanet.Types.Consensus;
 using Libplanet.Crypto;
-using Libplanet.Net;
 using Libplanet.Headless;
+using Libplanet.Net;
+using Libplanet.Store;
+using Libplanet.Store.Trie;
+using Libplanet.Types.Tx;
 using Nekoyume.Model.State;
-using Nekoyume.TableData;
-using NineChronicles.Headless.GraphTypes;
-using NineChronicles.Headless.GraphTypes.States;
 using NineChronicles.Headless.Tests.Common.Actions;
 using Xunit;
 using Xunit.Abstractions;
@@ -39,21 +47,25 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             const int repeat = 10;
             foreach (long index in Enumerable.Range(1, repeat))
             {
-                await BlockChain.MineBlock(miner);
+                Block block = BlockChain.ProposeBlock(
+                    ProposerPrivateKey,
+                    lastCommit: GenerateBlockCommit(BlockChain.Tip.Index, BlockChain.Tip.Hash, GenesisValidators));
+                BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, GenesisValidators));
 
-                var result = await ExecuteQueryAsync("subscription { tipChanged { index hash } }");
+                var result = await ExecuteSubscriptionQueryAsync("subscription { tipChanged { index hash } }");
 
+                // var data = (Dictionary<string, object>)((ExecutionNode) result.Data!).ToValue()!;
                 Assert.IsType<SubscriptionExecutionResult>(result);
-                var subscribeResult = (SubscriptionExecutionResult) result;
+                var subscribeResult = (SubscriptionExecutionResult)result;
                 Assert.Equal(index, BlockChain.Tip.Index);
-                var stream = subscribeResult.Streams.Values.FirstOrDefault();
+                var stream = subscribeResult.Streams!.Values.FirstOrDefault();
                 var rawEvents = await stream.Take((int)index);
                 Assert.NotNull(rawEvents);
 
-                var events = (Dictionary<string, object>) rawEvents.Data;
-                var tipChangedEvent = (Dictionary<string, object>) events["tipChanged"];
+                var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
+                var tipChangedEvent = (Dictionary<string, object>)events["tipChanged"];
                 Assert.Equal(index, tipChangedEvent["index"]);
-                Assert.Equal(BlockChain[index].Hash.ToByteArray(), ByteUtil.ParseHex((string) tipChangedEvent["hash"]));
+                Assert.Equal(BlockChain[index].Hash.ToByteArray(), ByteUtil.ParseHex((string)tipChangedEvent["hash"]));
             }
         }
 
@@ -64,9 +76,30 @@ namespace NineChronicles.Headless.Tests.GraphTypes
 
             var apvPrivateKey = new PrivateKey();
             var apv = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var genesisBlock = BlockChain<EmptyAction>.MakeGenesisBlock(
-                HashAlgorithmType.Of<SHA256>()
-            );
+            var actionEvaluator = new ActionEvaluator(
+                _ => null,
+                new BlockChainStates(new MemoryStore(), new TrieStateStore(new MemoryKeyValueStore())),
+                new SingleActionLoader(typeof(EmptyAction)));
+            var genesisBlock = BlockChain.ProposeGenesisBlock(
+                actionEvaluator,
+                transactions: new IAction[]
+                    {
+                        new Initialize(
+                            new ValidatorSet(
+                                new[]
+                                    {
+                                        new Validator(ProposerPrivateKey.PublicKey, BigInteger.One),
+                                        new Validator(apvPrivateKey.PublicKey, BigInteger.One)
+                                    }
+                                    .ToList()),
+                            states: ImmutableDictionary.Create<Address, IValue>())
+                    }.Select((sa, nonce) => Transaction.Create(nonce, new PrivateKey(), null, new[] { sa.PlainValue }))
+                    .ToImmutableList(),
+                privateKey: new PrivateKey());
+            var validators = new List<PrivateKey>
+            {
+                ProposerPrivateKey, apvPrivateKey
+            }.OrderBy(x => x.ToAddress()).ToList();
 
             // 에러로 인하여 NineChroniclesNodeService 를 사용할 수 없습니다. https://git.io/JfS0M
             // 따라서 LibplanetNodeService로 비슷한 환경을 맞춥니다.
@@ -79,29 +112,28 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 genesisBlock,
                 apv,
                 apvPrivateKey.PublicKey,
-                new Progress<PreloadState>(state =>
+                new Progress<BlockSyncState>(state =>
                 {
                     StandaloneContextFx.PreloadStateSubject.OnNext(state);
                 }),
-                new [] { seedNode.Swarm.AsPeer });
+                new[] { seedNode.Swarm.AsPeer });
 
-            var miner = new PrivateKey();
-            await seedNode.BlockChain.MineBlock(miner);
-            var result = await ExecuteQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
+            Block block = seedNode.BlockChain.ProposeBlock(ProposerPrivateKey);
+            seedNode.BlockChain.Append(block, GenerateBlockCommit(block.Index, block.Hash, validators));
+            var result = await ExecuteSubscriptionQueryAsync("subscription { preloadProgress { currentPhase totalPhase extra { type currentCount totalCount } } }");
             Assert.IsType<SubscriptionExecutionResult>(result);
 
             _ = service.StartAsync(cts.Token);
 
             await service.PreloadEnded.WaitAsync(cts.Token);
 
-            var subscribeResult = (SubscriptionExecutionResult) result;
-            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            var subscribeResult = (SubscriptionExecutionResult)result;
+            var stream = subscribeResult.Streams!.Values.FirstOrDefault();
 
             // BlockHashDownloadState  : 2
             // BlockDownloadState      : 1
             // BlockVerificationState  : 1
             // ActionExecutionState    : 1
-            const int preloadStatesCount = 5;
             var preloadProgressRecords =
                 new List<(long currentPhase, long totalPhase, string type, long currentCount, long totalCount)>();
             var expectedPreloadProgress = new[]
@@ -112,10 +144,11 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 (3L, 5L, "BlockVerificationState", 1L, 1L),
                 (5L, 5L, "ActionExecutionState", 1L, 1L),
             }.ToImmutableHashSet();
-            foreach (var index in Enumerable.Range(1, preloadStatesCount))
+            foreach (var index in Enumerable.Range(1, expectedPreloadProgress.Count()))
             {
                 var rawEvents = await stream.Take(index);
-                var preloadProgress = (Dictionary<string, object>)((Dictionary<string, object>)rawEvents.Data)["preloadProgress"];
+                var events = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
+                var preloadProgress = (Dictionary<string, object>)events["preloadProgress"];
                 var preloadProgressExtra = (Dictionary<string, object>)preloadProgress["extra"];
 
                 preloadProgressRecords.Add((
@@ -132,10 +165,10 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             await service.StopAsync(cts.Token);
         }
 
-        [Fact(Timeout = 15000)]
+        [Fact(Timeout = 25000)]
         public async Task SubscribeDifferentAppProtocolVersionEncounter()
         {
-            var result = await ExecuteQueryAsync(@"
+            var result = await ExecuteSubscriptionQueryAsync(@"
                 subscription {
                     differentAppProtocolVersionEncounter {
                         peer
@@ -154,8 +187,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }
                 }
             ");
-            var subscribeResult = (SubscriptionExecutionResult) result;
-            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            var subscribeResult = (SubscriptionExecutionResult)result;
+            var stream = subscribeResult.Streams!.Values.FirstOrDefault();
             Assert.NotNull(stream);
 
             await Assert.ThrowsAsync<TimeoutException>(async () =>
@@ -166,12 +199,16 @@ namespace NineChronicles.Headless.Tests.GraphTypes
             var apvPrivateKey = new PrivateKey();
             var apv1 = AppProtocolVersion.Sign(apvPrivateKey, 1);
             var apv2 = AppProtocolVersion.Sign(apvPrivateKey, 0);
-            var peer = new Peer(apvPrivateKey.PublicKey);
-            StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
-                new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
-            );
+            var peer = new BoundPeer(apvPrivateKey.PublicKey, new DnsEndPoint("0.0.0.0", 0));
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.DifferentAppProtocolVersionEncounterSubject.OnNext(
+                    new DifferentAppProtocolVersionEncounter(peer, apv1, apv2)
+                );
+            });
             var rawEvents = await stream.Take(1);
-            var rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var rawEvent = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
             var differentAppProtocolVersionEncounter =
                 (Dictionary<string, object>)rawEvent["differentAppProtocolVersionEncounter"];
             Assert.Equal(
@@ -195,7 +232,7 @@ namespace NineChronicles.Headless.Tests.GraphTypes
         [Fact(Timeout = 15000)]
         public async Task SubscribeNodeException()
         {
-            var result = await ExecuteQueryAsync(@"
+            var result = await ExecuteSubscriptionQueryAsync(@"
                 subscription {
                     nodeException {
                         code
@@ -203,8 +240,8 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                     }
                 }
             ");
-            var subscribeResult = (SubscriptionExecutionResult) result;
-            var stream = subscribeResult.Streams.Values.FirstOrDefault();
+            var subscribeResult = (SubscriptionExecutionResult)result;
+            var stream = subscribeResult.Streams!.Values.FirstOrDefault();
             Assert.NotNull(stream);
 
             await Assert.ThrowsAsync<TimeoutException>(async () =>
@@ -212,227 +249,49 @@ namespace NineChronicles.Headless.Tests.GraphTypes
                 await stream.Take(1).Timeout(TimeSpan.FromMilliseconds(5000)).FirstAsync();
             });
 
-            const Libplanet.Headless.NodeExceptionType code = (Libplanet.Headless.NodeExceptionType) 0x01;
+            const Libplanet.Headless.NodeExceptionType code = (Libplanet.Headless.NodeExceptionType)0x01;
             const string message = "This is test message.";
-            StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                StandaloneContextFx.NodeExceptionSubject.OnNext(new NodeException(code, message));
+            });
             var rawEvents = await stream.Take(1);
-            var rawEvent = (Dictionary<string, object>)rawEvents.Data;
+            var rawEvent = (Dictionary<string, object>)((ExecutionNode)rawEvents.Data!).ToValue()!;
             var nodeException =
                 (Dictionary<string, object>)rawEvent["nodeException"];
             Assert.Equal((int)code, nodeException["code"]);
             Assert.Equal(message, nodeException["message"]);
         }
 
-        [Fact]
-        public async Task SubscribeMonsterCollectionState()
-        {
-            ExecutionResult result = await ExecuteQueryAsync(@"
-                subscription {
-                    monsterCollectionState {
-                        address
-                        level
-                        expiredBlockIndex
-                        startedBlockIndex
-                        receivedBlockIndex
-                        rewardLevel
-                    }
-                }"
-            );
-            Assert.IsType<SubscriptionExecutionResult>(result);
-            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
-            Assert.NotNull(stream);
-
-            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
-            StandaloneContextFx.MonsterCollectionStateSubject.OnNext(monsterCollectionState);
-            ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            Dictionary<string, object> subject =
-                (Dictionary<string, object>)rawEvent["monsterCollectionState"];
-            Dictionary<string, object> expected = new Dictionary<string, object>
-            {
-                ["address"] = monsterCollectionState.address.ToString(),
-                ["level"] = 1L,
-                ["expiredBlockIndex"] = 201602L,
-                ["startedBlockIndex"] = 2L,
-                ["receivedBlockIndex"] = 0L,
-                ["rewardLevel"] = 0L,
-            };
-            Assert.Equal(expected, subject);
-        }
-
         [Theory]
-        [InlineData(100, 0, "100.00", 1, true)]
-        [InlineData(0, 2, "0.02", 2, false)]
-        [InlineData(10, 2, "10.02", 3, true)]
-        public async Task SubscribeMonsterCollectionStatus(int major, int minor, string decimalString, long tipIndex, bool lockup)
-        {
-            ExecutionResult result = await ExecuteQueryAsync(@"
-                subscription {
-                    monsterCollectionStatus {
-                        fungibleAssetValue {
-                            quantity
-                            currency
-                        }
-                        rewardInfos {
-                            itemId
-                            quantity
-                        },
-                        tipIndex
-                        lockup
-                    }
-                }"
-            );
-            Assert.IsType<SubscriptionExecutionResult>(result);
-            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
-            Assert.NotNull(stream);
-
-            Currency currency = new Currency("NCG", 2, minter: null);
-            FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
-            StandaloneContextFx.MonsterCollectionStatusSubject.OnNext(
-                new MonsterCollectionStatus(
-                    fungibleAssetValue,
-                    new List<MonsterCollectionRewardSheet.RewardInfo>
-                    {
-                        new MonsterCollectionRewardSheet.RewardInfo("1", "1")
-                    },
-                    tipIndex,
-                    lockup
-                )
-            );
-            ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            Dictionary<string, object> statusSubject =
-                (Dictionary<string, object>)rawEvent["monsterCollectionStatus"];
-            Dictionary<string, object> expected = new Dictionary<string, object>
-            {
-                ["fungibleAssetValue"] = new Dictionary<string, object>
-                {
-                    ["currency"] = "NCG",
-                    ["quantity"] = decimal.Parse(decimalString),
-                },
-                ["rewardInfos"] = new List<object>
-                {
-                    new Dictionary<string, object>
-                    {
-                        ["quantity"] = 1,
-                        ["itemId"] = 1,
-                    }
-                },
-                ["tipIndex"] = tipIndex,
-                ["lockup"] = lockup,
-            };
-            Assert.Equal(expected, statusSubject);
-        }
-
-        [Fact]
-        public async Task SubscribeMonsterCollectionStateByAgent()
+        [InlineData(100, 0, "100.00")]
+        [InlineData(0, 2, "0.02")]
+        [InlineData(10, 2, "10.02")]
+        public async Task SubscribeBalanceByAgent(int major, int minor, string decimalString)
         {
             var address = new Address();
             Assert.Empty(StandaloneContextFx.AgentAddresses);
-            ExecutionResult result = await ExecuteQueryAsync($@"
+            ExecutionResult result = await ExecuteSubscriptionQueryAsync($@"
                 subscription {{
-                    monsterCollectionStateByAgent(address: ""{address}"") {{
-                        address
-                        level
-                        expiredBlockIndex
-                        startedBlockIndex
-                        receivedBlockIndex
-                        rewardLevel
-                    }}
+                    balanceByAgent(address: ""{address}"")
                 }}"
             );
             Assert.IsType<SubscriptionExecutionResult>(result);
-            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
+            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult)result;
+            IObservable<ExecutionResult> stream = subscribeResult.Streams!.Values.First();
             Assert.NotNull(stream);
             Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
 
-            MonsterCollectionState monsterCollectionState = new MonsterCollectionState(default, 1, 2, Fixtures.TableSheetsFX.MonsterCollectionRewardSheet);
-            StandaloneContextFx.AgentAddresses[address].stateSubject.OnNext(monsterCollectionState);
-            ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            Dictionary<string, object> subject =
-                (Dictionary<string, object>)rawEvent["monsterCollectionStateByAgent"];
-            Dictionary<string, object> expected = new Dictionary<string, object>
-            {
-                ["address"] = monsterCollectionState.address.ToString(),
-                ["level"] = 1L,
-                ["expiredBlockIndex"] = 201602L,
-                ["startedBlockIndex"] = 2L,
-                ["receivedBlockIndex"] = 0L,
-                ["rewardLevel"] = 0L,
-            };
-            Assert.Equal(expected, subject);
-        }
-        
-        [Theory]
-        [InlineData(100, 0, "100.00", 10, true)]
-        [InlineData(0, 2, "0.02", 100, false)]
-        [InlineData(10, 2, "10.02", 1000, true)]
-        public async Task SubscribeMonsterCollectionStatusByAgent(int major, int minor, string decimalString, long tipIndex, bool lockup)
-        {
-            var address = new Address();
-            Assert.Empty(StandaloneContextFx.AgentAddresses);
-            ExecutionResult result = await ExecuteQueryAsync($@"
-                subscription {{
-                    monsterCollectionStatusByAgent(address: ""{address}"") {{
-                        fungibleAssetValue {{
-                            quantity
-                            currency
-                        }}
-                        rewardInfos {{
-                            itemId
-                            quantity
-                        }},
-                        tipIndex
-                        lockup
-                    }}
-                }}"
-            );
-            Assert.IsType<SubscriptionExecutionResult>(result);
-            SubscriptionExecutionResult subscribeResult = (SubscriptionExecutionResult) result;
-            IObservable<ExecutionResult> stream = subscribeResult.Streams.Values.First();
-            Assert.NotNull(stream);
-            Assert.NotEmpty(StandaloneContextFx.AgentAddresses);
-
-            Currency currency = new Currency("NCG", 2, minter: null);
+#pragma warning disable CS0618
+            // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+            Currency currency = Currency.Legacy("NCG", 2, null);
+#pragma warning restore CS0618
             FungibleAssetValue fungibleAssetValue = new FungibleAssetValue(currency, major, minor);
-            StandaloneContextFx.AgentAddresses[address].statusSubject.OnNext(
-                new MonsterCollectionStatus(
-                    fungibleAssetValue,
-                    new List<MonsterCollectionRewardSheet.RewardInfo>
-                    {
-                        new MonsterCollectionRewardSheet.RewardInfo("1", "1")
-                    },
-                    tipIndex,
-                    lockup
-                )
-            );
+            StandaloneContextFx.AgentAddresses[address].balanceSubject.OnNext(fungibleAssetValue.GetQuantityString(true));
             ExecutionResult rawEvents = await stream.Take(1);
-            Dictionary<string, object> rawEvent = (Dictionary<string, object>)rawEvents.Data;
-            Dictionary<string, object> statusSubject =
-                (Dictionary<string, object>)rawEvent["monsterCollectionStatusByAgent"];
-            Dictionary<string, object> expected = new Dictionary<string, object>
-            {
-                ["fungibleAssetValue"] = new Dictionary<string, object>
-                {
-                    ["currency"] = "NCG",
-                    ["quantity"] = decimal.Parse(decimalString),
-                },
-                ["rewardInfos"] = new List<object>
-                {
-                    new Dictionary<string, object>
-                    {
-                        ["quantity"] = 1,
-                        ["itemId"] = 1,
-                    }
-                },
-                ["tipIndex"] = tipIndex,
-                ["lockup"] = lockup,
-            };
-            Assert.Equal(expected, statusSubject);
+            var data = ((RootExecutionNode)rawEvents.Data.GetValue()).SubFields![0].Result!;
+            Assert.Equal(decimalString, data);
         }
     }
 }
