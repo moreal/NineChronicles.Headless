@@ -137,7 +137,6 @@
               <li><a href="#definition-ElementalType">ElementalType</a></li>
               <li><a href="#definition-EquipmentType">EquipmentType</a></li>
               <li><a href="#definition-ExplorerQuery">ExplorerQuery</a></li>
-              <li><a href="#definition-FungibleAssetBalancesType">FungibleAssetBalancesType</a></li>
               <li><a href="#definition-FungibleAssetValue">FungibleAssetValue</a></li>
               <li><a href="#definition-FungibleAssetValueInputType">FungibleAssetValueInputType</a></li>
               <li><a href="#definition-FungibleAssetValueType">FungibleAssetValueType</a></li>
@@ -147,6 +146,7 @@
               <li><a href="#definition-FungibleItemType">FungibleItemType</a></li>
               <li><a href="#definition-GaragesType">GaragesType</a></li>
               <li><a href="#definition-Guid">Guid</a></li>
+              <li><a href="#definition-HashDigest_SHA256">HashDigest_SHA256</a></li>
               <li><a href="#definition-ID">ID</a></li>
               <li><a href="#definition-Int">Int</a></li>
               <li><a href="#definition-InventoryItemType">InventoryItemType</a></li>
@@ -168,6 +168,7 @@
               <li><a href="#definition-MonsterCollectionSheetType">MonsterCollectionSheetType</a></li>
               <li><a href="#definition-MonsterCollectionStateType">MonsterCollectionStateType</a></li>
               <li><a href="#definition-MonsterCollectionStatusType">MonsterCollectionStatusType</a></li>
+              <li><a href="#definition-MultiAccountInfo">MultiAccountInfo</a></li>
               <li><a href="#definition-NodeExceptionType">NodeExceptionType</a></li>
               <li><a href="#definition-NodeState">NodeState</a></li>
               <li><a href="#definition-NodeStatusType">NodeStatusType</a></li>
@@ -216,7 +217,6 @@
               <li><a href="#definition-TxResultType">TxResultType</a></li>
               <li><a href="#definition-TxStatus">TxStatus</a></li>
               <li><a href="#definition-TxType">TxType</a></li>
-              <li><a href="#definition-UpdatedStateType">UpdatedStateType</a></li>
               <li><a href="#definition-ValidationQuery">ValidationQuery</a></li>
               <li><a href="#definition-Validator">Validator</a></li>
               <li><a href="#definition-Vote">Vote</a></li>
@@ -308,6 +308,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-symbol">actionQuery <span class="hljs-tag">{
     <span class="hljs-symbol">activateAccount</span>
     <span class="hljs-symbol">approvePledge</span>
+    <span class="hljs-symbol">auraSummon</span>
     <span class="hljs-symbol">claimRaidReward</span>
     <span class="hljs-symbol">claimStakeReward</span>
     <span class="hljs-symbol">claimWorldBossKillReward</span>
@@ -355,6 +356,7 @@ https://9c-main-api.nine-chronicles.com/graphql
     <span class="hljs-attr">"actionQuery"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"approvePledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"auraSummon"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"claimRaidReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"claimStakeReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"claimWorldBossKillReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
@@ -466,6 +468,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   )</span> <span class="hljs-tag">{
     <span class="hljs-symbol">activateAccount</span>
     <span class="hljs-symbol">approvePledge</span>
+    <span class="hljs-symbol">auraSummon</span>
     <span class="hljs-symbol">claimRaidReward</span>
     <span class="hljs-symbol">claimStakeReward</span>
     <span class="hljs-symbol">claimWorldBossKillReward</span>
@@ -516,7 +519,7 @@ https://9c-main-api.nine-chronicles.com/graphql
     <span class="hljs-attr">"ticker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Mead"</span>
   <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"nonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DateTimeOffset</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -532,6 +535,7 @@ https://9c-main-api.nine-chronicles.com/graphql
     <span class="hljs-attr">"actionTxQuery"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"approvePledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"auraSummon"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"claimRaidReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"claimStakeReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"claimWorldBossKillReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
@@ -630,7 +634,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Variables</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"invitationCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"invitationCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -639,7 +643,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Response</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -773,7 +777,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Response</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activationStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"addressActivated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activationStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"addressActivated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -1010,6 +1014,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-symbol">address</span>
       <span class="hljs-symbol">hex</span>
     }</span></span>
+    <span class="hljs-symbol">serializedPayload</span>
     <span class="hljs-symbol">signature</span>
     <span class="hljs-symbol">signer</span>
     <span class="hljs-symbol">timestamp</span>
@@ -1040,6 +1045,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">TxId</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"nonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PublicKeyType</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"serializedPayload"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"signature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"signer"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
@@ -1335,7 +1341,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"monsterCollectionStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"fungibleAssetValue"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">FungibleAssetValueType</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"lockup"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"lockup"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"rewardInfos"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">MonsterCollectionRewardInfoType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"tipIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">}</span>
@@ -1493,14 +1499,14 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"nodeStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"appProtocolVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">AppProtocolVersionType</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"bootstrapEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"bootstrapEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"genesis"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BlockHeader</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"informationalVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"isMining"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"preloadEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"productVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"isMining"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"preloadEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"productVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"stagedTxIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">TxId</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"stagedTxIdsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stagedTxIdsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"subscriberAddresses"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"subscriberAddressesCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"tip"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BlockHeader</span><span class="hljs-punctuation">,</span>
@@ -1602,6 +1608,14 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-symbol">rpcInformation <span class="hljs-tag">{
     <span class="hljs-symbol">clients</span>
     <span class="hljs-symbol">clientsByDevice</span>
+    <span class="hljs-symbol">clientsByIps <span class="hljs-tag">{
+      <span class="hljs-symbol">agents</span>
+      <span class="hljs-symbol">agentsCount</span>
+      <span class="hljs-symbol">ips</span>
+      <span class="hljs-symbol">ipsCount</span>
+      <span class="hljs-symbol">key</span>
+    }</span></span>
+    <span class="hljs-symbol">clientsCountByIps</span>
     <span class="hljs-symbol">totalCount</span>
     <span class="hljs-symbol">totalCountByDevice</span>
   }</span></span>
@@ -1619,8 +1633,10 @@ https://9c-main-api.nine-chronicles.com/graphql
     <span class="hljs-attr">"rpcInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"clients"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"clientsByDevice"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"totalCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"totalCountByDevice"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+      <span class="hljs-attr">"clientsByIps"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">MultiAccountInfo</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"clientsCountByIps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"totalCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"totalCountByDevice"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1899,6 +1915,11 @@ https://9c-main-api.nine-chronicles.com/graphql
       }</span></span>
       <span class="hljs-symbol">garageBalancesAddr</span>
     }</span></span>
+    <span class="hljs-symbol">latestStakeRewards <span class="hljs-tag">{
+      <span class="hljs-symbol">orderedList <span class="hljs-tag">{
+        <span class="hljs-type">...StakeRegularRewardsTypeFragment</span>
+      }</span></span>
+    }</span></span>
     <span class="hljs-symbol">monsterCollectionSheet <span class="hljs-tag">{
       <span class="hljs-symbol">orderedList <span class="hljs-tag">{
         <span class="hljs-type">...MonsterCollectionRowTypeFragment</span>
@@ -1975,6 +1996,9 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-symbol">claimableBlockIndex</span>
       <span class="hljs-symbol">deposit</span>
       <span class="hljs-symbol">receivedBlockIndex</span>
+      <span class="hljs-symbol">stakeRewards <span class="hljs-tag">{
+        <span class="hljs-type">...StakeRewardsTypeFragment</span>
+      }</span></span>
       <span class="hljs-symbol">startedBlockIndex</span>
     }</span></span>
     <span class="hljs-symbol">stakeStates <span class="hljs-tag">{
@@ -1986,6 +2010,9 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-symbol">claimableBlockIndex</span>
       <span class="hljs-symbol">deposit</span>
       <span class="hljs-symbol">receivedBlockIndex</span>
+      <span class="hljs-symbol">stakeRewards <span class="hljs-tag">{
+        <span class="hljs-type">...StakeRewardsTypeFragment</span>
+      }</span></span>
       <span class="hljs-symbol">startedBlockIndex</span>
     }</span></span>
     <span class="hljs-symbol">unlockedRecipeIds</span>
@@ -2038,11 +2065,12 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-attr">"balance"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">FungibleAssetValueWithCurrencyType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"crystalMonsterCollectionMultiplierSheet"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CrystalMonsterCollectionMultiplierSheetType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"garages"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">GaragesType</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"latestStakeRewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeRewardsType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"monsterCollectionSheet"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MonsterCollectionSheetType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"monsterCollectionState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MonsterCollectionStateType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"orderDigestList"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">OrderDigestListStateType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"pledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MeadPledgeType</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"raidId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"raidId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"raiderList"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"raiderState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">RaiderStateType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"rankingMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">RankingMapStateType</span><span class="hljs-punctuation">,</span>
@@ -2051,7 +2079,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-attr">"stakeRewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeRewardsType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"stakeState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeStateType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"stakeStates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">StakeStateType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"unlockedRecipeIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"unlockedRecipeIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"unlockedWorldIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"weeklyArena"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">WeeklyArenaStateType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"worldBossKillRewardRecord"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">WorldBossKillRewardRecordType</span><span class="hljs-punctuation">,</span>
@@ -2108,6 +2136,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-symbol">publicKey <span class="hljs-tag">{
         <span class="hljs-type">...PublicKeyTypeFragment</span>
       }</span></span>
+      <span class="hljs-symbol">serializedPayload</span>
       <span class="hljs-symbol">signature</span>
       <span class="hljs-symbol">signer</span>
       <span class="hljs-symbol">timestamp</span>
@@ -2122,6 +2151,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-symbol">publicKey <span class="hljs-tag">{
         <span class="hljs-type">...PublicKeyTypeFragment</span>
       }</span></span>
+      <span class="hljs-symbol">serializedPayload</span>
       <span class="hljs-symbol">signature</span>
       <span class="hljs-symbol">signer</span>
       <span class="hljs-symbol">timestamp</span>
@@ -2132,18 +2162,10 @@ https://9c-main-api.nine-chronicles.com/graphql
     <span class="hljs-symbol">transactionResult <span class="hljs-tag">{
       <span class="hljs-symbol">blockHash</span>
       <span class="hljs-symbol">blockIndex</span>
-      <span class="hljs-symbol">exceptionMetadata</span>
-      <span class="hljs-symbol">exceptionName</span>
-      <span class="hljs-symbol">fungibleAssetsDelta <span class="hljs-tag">{
-        <span class="hljs-type">...FungibleAssetBalancesTypeFragment</span>
-      }</span></span>
+      <span class="hljs-symbol">exceptionNames</span>
+      <span class="hljs-symbol">inputState</span>
+      <span class="hljs-symbol">outputState</span>
       <span class="hljs-symbol">txStatus</span>
-      <span class="hljs-symbol">updatedFungibleAssets <span class="hljs-tag">{
-        <span class="hljs-type">...FungibleAssetBalancesTypeFragment</span>
-      }</span></span>
-      <span class="hljs-symbol">updatedStates <span class="hljs-tag">{
-        <span class="hljs-type">...UpdatedStateTypeFragment</span>
-      }</span></span>
     }</span></span>
     <span class="hljs-symbol">unsignedTransaction</span>
   }</span></span>
@@ -2160,7 +2182,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"transaction"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"attachSignature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createUnsignedTx"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"createUnsignedTx"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"getTx"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">TransactionType</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"ncTransactions"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">TransactionType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"nextTxNonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
@@ -2267,7 +2289,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"amount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"memo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"memo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"recipient"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"sender"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"txId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span>
@@ -2328,7 +2350,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"validation"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"privateKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span>
+    <span class="hljs-attr">"validation"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"privateKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -2441,7 +2463,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Response</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activationStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activationStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -2837,9 +2859,9 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"amount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"amount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"currencyAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"000000000000000000000000000000000000000A"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"memo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"memo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"recipient"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"txNonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -3009,7 +3031,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Response</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"balanceByAgent"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"balanceByAgent"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -3118,7 +3140,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"nodeException"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"code"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"message"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+      <span class="hljs-attr">"message"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -3199,12 +3221,12 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"nodeStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"appProtocolVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">AppProtocolVersionType</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"bootstrapEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"bootstrapEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"genesis"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BlockHeader</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"informationalVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"isMining"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"preloadEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"productVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"informationalVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"isMining"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"preloadEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"productVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"stagedTxIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">TxId</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"stagedTxIdsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"subscriberAddresses"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
@@ -3402,7 +3424,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                         <td>
                           <span class="property-name"><code>actionType</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
                         </td>
-                        <td> A type of action in transaction. </td>
+                        <td> A regular expression to filter transactions based on action type. </td>
                       </tr>
                     </tbody>
                   </table>
@@ -3425,6 +3447,7 @@ https://9c-main-api.nine-chronicles.com/graphql
       <span class="hljs-symbol">publicKey <span class="hljs-tag">{
         <span class="hljs-type">...PublicKeyTypeFragment</span>
       }</span></span>
+      <span class="hljs-symbol">serializedPayload</span>
       <span class="hljs-symbol">signature</span>
       <span class="hljs-symbol">signer</span>
       <span class="hljs-symbol">timestamp</span>
@@ -3433,18 +3456,10 @@ https://9c-main-api.nine-chronicles.com/graphql
     <span class="hljs-symbol">txResult <span class="hljs-tag">{
       <span class="hljs-symbol">blockHash</span>
       <span class="hljs-symbol">blockIndex</span>
-      <span class="hljs-symbol">exceptionMetadata</span>
-      <span class="hljs-symbol">exceptionName</span>
-      <span class="hljs-symbol">fungibleAssetsDelta <span class="hljs-tag">{
-        <span class="hljs-type">...FungibleAssetBalancesTypeFragment</span>
-      }</span></span>
+      <span class="hljs-symbol">exceptionNames</span>
+      <span class="hljs-symbol">inputState</span>
+      <span class="hljs-symbol">outputState</span>
       <span class="hljs-symbol">txStatus</span>
-      <span class="hljs-symbol">updatedFungibleAssets <span class="hljs-tag">{
-        <span class="hljs-type">...FungibleAssetBalancesTypeFragment</span>
-      }</span></span>
-      <span class="hljs-symbol">updatedStates <span class="hljs-tag">{
-        <span class="hljs-type">...UpdatedStateTypeFragment</span>
-      }</span></span>
     }</span></span>
   }</span></span>
 }</span></span>
@@ -3533,8 +3548,8 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"inspection"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"json"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"inspection"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"json"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"raw"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -3912,6 +3927,36 @@ https://9c-main-api.nine-chronicles.com/graphql
                         </td>
                       </tr>
                       <tr class="row-has-field-arguments">
+                        <td data-property-name=""><span class="property-name"><code>auraSummon</code></span> - <span class="property-type"><a href="#definition-ByteString"><code>ByteString!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr class="row-field-arguments">
+                        <td colspan="2">
+                          <div class="field-arguments">
+                            <h5 class="field-arguments-heading"> Arguments </h5>
+                            <div class="field-argument-list">
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>avatarAddress</code></span> - <span class="property-type"><a href="#definition-Address"><code>Address!</code></a></span>
+                                </h6>
+                                <p>Avatar address to get summoned items</p>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>groupId</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                                </h6>
+                                <p>Summon group id</p>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>summonCount</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                                </h6>
+                                <p>Count to summon. Must between 1 and 10.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="row-has-field-arguments">
                         <td data-property-name=""><span class="property-name"><code>claimRaidReward</code></span> - <span class="property-type"><a href="#definition-ByteString"><code>ByteString!</code></a></span>
                         </td>
                         <td>
@@ -4787,6 +4832,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"approvePledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"auraSummon"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimRaidReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimStakeReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimWorldBossKillReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
@@ -4882,6 +4928,36 @@ https://9c-main-api.nine-chronicles.com/graphql
                         </td>
                       </tr>
                       <tr class="row-has-field-arguments">
+                        <td data-property-name=""><span class="property-name"><code>auraSummon</code></span> - <span class="property-type"><a href="#definition-ByteString"><code>ByteString!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr class="row-field-arguments">
+                        <td colspan="2">
+                          <div class="field-arguments">
+                            <h5 class="field-arguments-heading"> Arguments </h5>
+                            <div class="field-argument-list">
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>avatarAddress</code></span> - <span class="property-type"><a href="#definition-Address"><code>Address!</code></a></span>
+                                </h6>
+                                <p>Avatar address to get summoned items</p>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>groupId</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                                </h6>
+                                <p>Summon group id</p>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>summonCount</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                                </h6>
+                                <p>Count to summon. Must between 1 and 10.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="row-has-field-arguments">
                         <td data-property-name=""><span class="property-name"><code>claimRaidReward</code></span> - <span class="property-type"><a href="#definition-ByteString"><code>ByteString!</code></a></span>
                         </td>
                         <td>
@@ -5757,6 +5833,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"approvePledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"auraSummon"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimRaidReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimStakeReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimWorldBossKillReward"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
@@ -5840,7 +5917,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"activateAccount"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -6167,7 +6244,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"avatarStates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">AvatarStateType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"crystal"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"gold"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"hasTradedItem"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"hasTradedItem"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"monsterCollectionLevel"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"monsterCollectionRound"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"pledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MeadPledgeType</span>
@@ -6316,8 +6393,8 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"arenaRecord"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArenaRecordType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"avatarAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"avatarName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"dailyChallengeCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"score"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+  <span class="hljs-attr">"dailyChallengeCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"score"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -6404,11 +6481,11 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"avatarAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"lose"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"purchasedTicketCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"score"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"purchasedTicketCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"score"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"ticket"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"ticketResetCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"win"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+  <span class="hljs-attr">"ticketResetCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"win"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -6461,7 +6538,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"draw"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"lose"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"win"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"draw"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"lose"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"win"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -6634,7 +6711,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"actionPoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"agentAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"blockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"blockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"characterId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"combinationSlotAddresses"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"combinationSlots"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">CombinationSlotStateType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
@@ -6642,20 +6719,20 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"ear"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"eventMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CollectionMapType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"exp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"hair"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"index"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"hair"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"index"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"inventory"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">InventoryType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"inventoryAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CollectionMapType</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"lens"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"lens"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"mailBox"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MailBoxType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"monsterMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CollectionMapType</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"questList"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">QuestListType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"runes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">RuneStateType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stageMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CollectionMapType</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"tail"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"tail"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"updatedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"worldInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">WorldInformationType</span>
 <span class="hljs-punctuation">}</span>
@@ -6927,9 +7004,9 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"height"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"round"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"round"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"votes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Vote</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -6992,7 +7069,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"hash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"index"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"index"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"miner"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -7161,8 +7238,8 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"endPoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"publicIpAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"endPoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"publicIpAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PublicKey</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -7316,7 +7393,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"petId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"startBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"unlockBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"unlockStage"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+  <span class="hljs-attr">"unlockStage"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -7482,7 +7559,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"elementalType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FIRE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"equipped"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"grade"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Guid</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemSubType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"AP_STONE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CONSUMABLE"</span><span class="hljs-punctuation">,</span>
@@ -7794,6 +7871,13 @@ https://9c-main-api.nine-chronicles.com/graphql
                       <tr>
                         <td>
                           <p><code>GARAGE</code></p>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>MEAD</code></p>
                         </td>
                         <td>
                         </td>
@@ -8306,15 +8390,15 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"buffSkills"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">SkillType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"elementalType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FIRE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"equipped"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"grade"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"exp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"grade"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Guid</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemSubType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"AP_STONE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CONSUMABLE"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"requiredBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"setId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"setId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"skills"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">SkillType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stat"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DecimalStatType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"statsMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StatsMapType</span>
@@ -8381,55 +8465,6 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"nodeState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">NodeState</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stateQuery"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">LibplanetStateQuery</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"transactionQuery"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">TransactionQuery</span>
-<span class="hljs-punctuation">}</span>
-</code></pre>
-                    </body>
-                  </html>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section id="definition-FungibleAssetBalancesType" class="definition definition-object" data-traverse-target="definition-FungibleAssetBalancesType">
-            <div class="definition-group-name">
-              <a href="#group-Types">Types</a>
-            </div>
-            <h2 class="definition-heading">FungibleAssetBalancesType</h2>
-            <div class="doc-row">
-              <div class="doc-copy">
-                <div class="definition-properties doc-copy-section">
-                  <h5>Fields</h5>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Field Name</th>
-                        <th>Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>address</code></span> - <span class="property-type"><a href="#definition-Address"><code>Address!</code></a></span>
-                        </td>
-                        <td>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>fungibleAssetValues</code></span> - <span class="property-type"><a href="#definition-FungibleAssetValue"><code>[FungibleAssetValue!]!</code></a></span>
-                        </td>
-                        <td>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="doc-examples">
-                <div class="example-section example-section-is-code">
-                  <h5>Example</h5>
-                  <html>
-                    <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"fungibleAssetValues"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">FungibleAssetValue</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -8573,7 +8608,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"decimalPlaces"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">196</span><span class="hljs-punctuation">,</span> <span class="hljs-number">189</span><span class="hljs-punctuation">,</span> <span class="hljs-number">173</span><span class="hljs-punctuation">,</span> <span class="hljs-number">171</span><span class="hljs-punctuation">,</span> <span class="hljs-number">167</span><span class="hljs-punctuation">,</span> <span class="hljs-number">163</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"minters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"quantity"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"ticker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+  <span class="hljs-attr">"ticker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -8622,7 +8657,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"currency"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"quantity"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-attr">"quantity"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -8731,7 +8766,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"fungibleId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"fungibleId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -8845,7 +8880,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"fungibleItemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"fungibleItemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemSubType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"AP_STONE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CONSUMABLE"</span>
 <span class="hljs-punctuation">}</span>
@@ -8942,6 +8977,27 @@ https://9c-main-api.nine-chronicles.com/graphql
               </div>
             </div>
           </section>
+          <section id="definition-HashDigest_SHA256" class="definition definition-scalar" data-traverse-target="definition-HashDigest_SHA256">
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">HashDigest_SHA256</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <html>
+                    <head></head>
+                    <body><pre><code class="hljs language-gql"><span class="hljs-symbol">HashDigest_SHA256</span>
+</code></pre>
+                    </body>
+                  </html>
+                </div>
+              </div>
+            </div>
+          </section>
           <section id="definition-ID" class="definition definition-scalar" data-traverse-target="definition-ID">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -8959,7 +9015,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-number">4</span>
+                    <body><pre><code class="hljs language-gql"><span class="hljs-symbol">"4"</span>
 </code></pre>
                     </body>
                   </html>
@@ -9052,8 +9108,8 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CONSUMABLE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"lockId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Guid</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"locked"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
@@ -9481,7 +9537,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"elementalType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FIRE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"grade"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Guid</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemSubType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"AP_STONE"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CONSUMABLE"</span><span class="hljs-punctuation">,</span>
@@ -9692,7 +9748,11 @@ https://9c-main-api.nine-chronicles.com/graphql
                                 </h6>
                               </div>
                               <div class="field-argument">
-                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID</code></a></span>
+                                </h6>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetStateRootHash</code></span> - <span class="property-type"><a href="#definition-HashDigest_SHA256"><code>HashDigest_SHA256</code></a></span>
                                 </h6>
                               </div>
                               <div class="field-argument">
@@ -9719,7 +9779,11 @@ https://9c-main-api.nine-chronicles.com/graphql
                                 </h6>
                               </div>
                               <div class="field-argument">
-                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID</code></a></span>
+                                </h6>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetStateRootHash</code></span> - <span class="property-type"><a href="#definition-HashDigest_SHA256"><code>HashDigest_SHA256</code></a></span>
                                 </h6>
                               </div>
                             </div>
@@ -9742,7 +9806,11 @@ https://9c-main-api.nine-chronicles.com/graphql
                                 </h6>
                               </div>
                               <div class="field-argument">
-                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID</code></a></span>
+                                </h6>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetStateRootHash</code></span> - <span class="property-type"><a href="#definition-HashDigest_SHA256"><code>HashDigest_SHA256</code></a></span>
                                 </h6>
                               </div>
                             </div>
@@ -9761,7 +9829,11 @@ https://9c-main-api.nine-chronicles.com/graphql
                             <h5 class="field-arguments-heading"> Arguments </h5>
                             <div class="field-argument-list">
                               <div class="field-argument">
-                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetBlockHash</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID</code></a></span>
+                                </h6>
+                              </div>
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>offsetStateRootHash</code></span> - <span class="property-type"><a href="#definition-HashDigest_SHA256"><code>HashDigest_SHA256</code></a></span>
                                 </h6>
                               </div>
                             </div>
@@ -9849,7 +9921,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"mails"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">MailType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"mails"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">MailType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -9974,7 +10046,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"elementalType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FIRE"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"grade"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"grade"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemSubType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"AP_STONE"</span><span class="hljs-punctuation">,</span>
@@ -10124,7 +10196,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"quantity"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"quantity"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -10178,7 +10250,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"requiredGold"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"requiredGold"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"rewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">MonsterCollectionRewardInfoType</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -10375,6 +10447,76 @@ https://9c-main-api.nine-chronicles.com/graphql
               </div>
             </div>
           </section>
+          <section id="definition-MultiAccountInfo" class="definition definition-object" data-traverse-target="definition-MultiAccountInfo">
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">MultiAccountInfo</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>agents</code></span> - <span class="property-type"><a href="#definition-String"><code>[String]</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>agentsCount</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>ips</code></span> - <span class="property-type"><a href="#definition-String"><code>[String]</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>ipsCount</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>key</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <html>
+                    <head></head>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"agents"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"agentsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"ips"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"ipsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"key"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                    </body>
+                  </html>
+                </div>
+              </div>
+            </div>
+          </section>
           <section id="definition-NodeExceptionType" class="definition definition-object" data-traverse-target="definition-NodeExceptionType">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -10411,7 +10553,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"code"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"message"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"code"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"message"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -10607,14 +10749,14 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"appProtocolVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">AppProtocolVersionType</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"bootstrapEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"bootstrapEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"genesis"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BlockHeader</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"informationalVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isMining"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isMining"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"preloadEnded"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"productVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"productVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stagedTxIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">TxId</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stagedTxIdsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stagedTxIdsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"subscriberAddresses"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"subscriberAddressesCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"tip"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BlockHeader</span><span class="hljs-punctuation">,</span>
@@ -10877,13 +11019,13 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"combatPoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"expiredBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"itemCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"itemCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"orderId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Guid</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"sellerAgentAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"startedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"startedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"tradableId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Guid</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -11351,15 +11493,15 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"avatarAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"avatarName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"avatarName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"cp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"highScore"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"iconId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"latestBossLevel"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"latestRewardRank"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"latestBossLevel"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"latestRewardRank"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"purchaseCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"purchaseCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"refillBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"remainChallengeCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"totalChallengeCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
@@ -11444,7 +11586,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"avatarAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"avatarName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"exp"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stageClearedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"updatedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -11599,6 +11741,42 @@ https://9c-main-api.nine-chronicles.com/graphql
                           </div>
                         </td>
                       </tr>
+                      <tr class="row-has-field-arguments">
+                        <td data-property-name=""><span class="property-name"><code>clientsByIps</code></span> - <span class="property-type"><a href="#definition-MultiAccountInfo"><code>[MultiAccountInfo]!</code></a></span>
+                        </td>
+                        <td> clients connected to this node grouped by Ip addresses. </td>
+                      </tr>
+                      <tr class="row-field-arguments">
+                        <td colspan="2">
+                          <div class="field-arguments">
+                            <h5 class="field-arguments-heading"> Arguments </h5>
+                            <div class="field-argument-list">
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>minimum</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                                </h6>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="row-has-field-arguments">
+                        <td data-property-name=""><span class="property-name"><code>clientsCountByIps</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                        </td>
+                        <td> clients count connected to this node grouped by Ip addresses. </td>
+                      </tr>
+                      <tr class="row-field-arguments">
+                        <td colspan="2">
+                          <div class="field-arguments">
+                            <h5 class="field-arguments-heading"> Arguments </h5>
+                            <div class="field-argument-list">
+                              <div class="field-argument">
+                                <h6 class="field-argument-name"><span class="property-name"><code>minimum</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                                </h6>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
                       <tr>
                         <td data-property-name=""><span class="property-name"><code>totalCount</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
                         </td>
@@ -11634,8 +11812,10 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"clients"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"clientsByDevice"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"clientsByIps"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">MultiAccountInfo</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"clientsCountByIps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"totalCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"totalCountByDevice"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+  <span class="hljs-attr">"totalCountByDevice"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -11728,7 +11908,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"runeId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"runeId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -11995,8 +12175,8 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"currencyEnum"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CRYSTAL"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"currencyTicker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-attr">"currencyTicker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -12068,9 +12248,9 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"chance"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"chance"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"elementalType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FIRE"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"power"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"referencedStatType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ARMOR_PENETRATION"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"statPowerRatio"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
@@ -12172,7 +12352,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -12244,10 +12424,10 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"currencyDecimalPlaces"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"currencyTicker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"currencyTicker"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"decimalRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Decimal</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"rate"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"itemId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"rate"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"CURRENCY"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -12309,7 +12489,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"bonusRewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">StakeRegularFixedRewardInfoType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"requiredGold"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"rewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">StakeRegularRewardInfoType</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
@@ -12433,9 +12613,10 @@ https://9c-main-api.nine-chronicles.com/graphql
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>achievements</code></span> - <span class="property-type"><a href="#definition-StakeAchievementsType"><code>StakeAchievementsType!</code></a></span>
+                        <td data-property-name="" class="definition-deprecated"><span class="property-name"><code>achievements</code></span> - <span class="property-type"><a href="#definition-StakeAchievementsType"><code>StakeAchievementsType</code></a></span>
                         </td>
-                        <td> The staking achievements. </td>
+                        <td> The staking achievements. <span class="deprecation-reason">Since StakeStateV2, the achievement became removed.</span>
+                        </td>
                       </tr>
                       <tr>
                         <td data-property-name=""><span class="property-name"><code>address</code></span> - <span class="property-type"><a href="#definition-Address"><code>Address!</code></a></span>
@@ -12458,12 +12639,18 @@ https://9c-main-api.nine-chronicles.com/graphql
                         <td> The staked amount. </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>receivedBlockIndex</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                        <td data-property-name=""><span class="property-name"><code>receivedBlockIndex</code></span> - <span class="property-type"><a href="#definition-Long"><code>Long!</code></a></span>
                         </td>
                         <td> The block index the user received rewards. </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>startedBlockIndex</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                        <td data-property-name=""><span class="property-name"><code>stakeRewards</code></span> - <span class="property-type"><a href="#definition-StakeRewardsType"><code>StakeRewardsType!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>startedBlockIndex</code></span> - <span class="property-type"><a href="#definition-Long"><code>Long!</code></a></span>
                         </td>
                         <td> The block index the user started to stake. </td>
                       </tr>
@@ -12481,9 +12668,10 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"cancellableBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"claimableBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"deposit"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"receivedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"startedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+  <span class="hljs-attr">"deposit"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"receivedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stakeRewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeRewardsType</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"startedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -12776,6 +12964,11 @@ https://9c-main-api.nine-chronicles.com/graphql
                         </td>
                       </tr>
                       <tr>
+                        <td data-property-name=""><span class="property-name"><code>latestStakeRewards</code></span> - <span class="property-type"><a href="#definition-StakeRewardsType"><code>StakeRewardsType</code></a></span>
+                        </td>
+                        <td> The latest stake rewards based on StakePolicySheet. </td>
+                      </tr>
+                      <tr>
                         <td data-property-name=""><span class="property-name"><code>monsterCollectionSheet</code></span> - <span class="property-type"><a href="#definition-MonsterCollectionSheetType"><code>MonsterCollectionSheetType</code></a></span>
                         </td>
                         <td>
@@ -12948,9 +13141,10 @@ https://9c-main-api.nine-chronicles.com/graphql
                         </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>stakeRewards</code></span> - <span class="property-type"><a href="#definition-StakeRewardsType"><code>StakeRewardsType</code></a></span>
+                        <td data-property-name="" class="definition-deprecated"><span class="property-name"><code>stakeRewards</code></span> - <span class="property-type"><a href="#definition-StakeRewardsType"><code>StakeRewardsType</code></a></span>
                         </td>
                         <td>
+                          <span class="deprecation-reason">Since stake3, claim_stake_reward9 actions, each stakers have their own contracts.</span>
                         </td>
                       </tr>
                       <tr class="row-has-field-arguments">
@@ -13101,11 +13295,12 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"balance"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">FungibleAssetValueWithCurrencyType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"crystalMonsterCollectionMultiplierSheet"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CrystalMonsterCollectionMultiplierSheetType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"garages"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">GaragesType</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"latestStakeRewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeRewardsType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"monsterCollectionSheet"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MonsterCollectionSheetType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"monsterCollectionState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MonsterCollectionStateType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"orderDigestList"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">OrderDigestListStateType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"pledge"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">MeadPledgeType</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"raidId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"raidId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"raiderList"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Address</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"raiderState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">RaiderStateType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"rankingMap"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">RankingMapStateType</span><span class="hljs-punctuation">,</span>
@@ -13114,7 +13309,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"stakeRewards"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeRewardsType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stakeState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">StakeStateType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stakeStates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">StakeStateType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"unlockedRecipeIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"unlockedRecipeIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"unlockedWorldIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"weeklyArena"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">WeeklyArenaStateType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"worldBossKillRewardRecord"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">WorldBossKillRewardRecordType</span><span class="hljs-punctuation">,</span>
@@ -13189,7 +13384,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"aTK"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"cRI"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"dEF"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"hIT"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"hP"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"sPD"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"aTK"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"cRI"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"dEF"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"hIT"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"hP"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"sPD"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -13471,7 +13666,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                               <div class="field-argument">
                                 <h6 class="field-argument-name"><span class="property-name"><code>actionType</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
                                 </h6>
-                                <p>filter tx by having actions&#39; type</p>
+                                <p>filter tx by having actions&#39; type. It is regular expression.</p>
                               </div>
                               <div class="field-argument">
                                 <h6 class="field-argument-name"><span class="property-name"><code>limit</code></span> - <span class="property-type"><a href="#definition-Long"><code>Long!</code></a></span>
@@ -13597,7 +13792,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"attachSignature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"createUnsignedTx"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"createUnsignedTx"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"getTx"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">TransactionType</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"ncTransactions"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">TransactionType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"nextTxNonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
@@ -13822,7 +14017,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"bindSignature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"bindSignature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"nextNonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stagedTransactions"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Transaction</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"transaction"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Transaction</span><span class="hljs-punctuation">,</span>
@@ -13875,6 +14070,11 @@ https://9c-main-api.nine-chronicles.com/graphql
                         <td> A PublicKey of the account who signed this transaction. </td>
                       </tr>
                       <tr>
+                        <td data-property-name=""><span class="property-name"><code>serializedPayload</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        </td>
+                        <td> A serialized tx payload in base64 string. </td>
+                      </tr>
+                      <tr>
                         <td data-property-name=""><span class="property-name"><code>signature</code></span> - <span class="property-type"><a href="#definition-ByteString"><code>ByteString!</code></a></span>
                         </td>
                         <td> A digital signature of the content of this transaction. </td>
@@ -13908,6 +14108,7 @@ https://9c-main-api.nine-chronicles.com/graphql
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">TxId</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"nonce"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PublicKeyType</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"serializedPayload"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"signature"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"signer"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
@@ -13983,7 +14184,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"amount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"amount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ByteString</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"memo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"recipient"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
@@ -14046,37 +14247,24 @@ https://9c-main-api.nine-chronicles.com/graphql
                         <td> The block index which the target transaction executed. </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>exceptionMetadata</code></span> - <span class="property-type"><a href="#definition-BencodexValue"><code>BencodexValue</code></a></span>
-                        </td>
-                        <td> The hexadecimal string of the exception metadata. (when only failed) </td>
-                      </tr>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>exceptionName</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                        <td data-property-name=""><span class="property-name"><code>exceptionNames</code></span> - <span class="property-type"><a href="#definition-String"><code>[String]</code></a></span>
                         </td>
                         <td> The name of exception. (when only failed) </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>fungibleAssetsDelta</code></span> - <span class="property-type"><a href="#definition-FungibleAssetBalancesType"><code>[FungibleAssetBalancesType!]</code></a></span>
+                        <td data-property-name=""><span class="property-name"><code>inputState</code></span> - <span class="property-type"><a href="#definition-HashDigest_SHA256"><code>HashDigest_SHA256</code></a></span>
                         </td>
-                        <td>
+                        <td> The input state's root hash which the target transaction executed. </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>outputState</code></span> - <span class="property-type"><a href="#definition-HashDigest_SHA256"><code>HashDigest_SHA256</code></a></span>
                         </td>
+                        <td> The output state's root hash which the target transaction executed. </td>
                       </tr>
                       <tr>
                         <td data-property-name=""><span class="property-name"><code>txStatus</code></span> - <span class="property-type"><a href="#definition-TxStatus"><code>TxStatus!</code></a></span>
                         </td>
                         <td> The transaction status. </td>
-                      </tr>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>updatedFungibleAssets</code></span> - <span class="property-type"><a href="#definition-FungibleAssetBalancesType"><code>[FungibleAssetBalancesType!]</code></a></span>
-                        </td>
-                        <td>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>updatedStates</code></span> - <span class="property-type"><a href="#definition-UpdatedStateType"><code>[UpdatedStateType!]</code></a></span>
-                        </td>
-                        <td>
-                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -14088,14 +14276,12 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"blockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exceptionMetadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BencodexValue</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"exceptionName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"fungibleAssetsDelta"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">FungibleAssetBalancesType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"txStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FAILURE"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"updatedFungibleAssets"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">FungibleAssetBalancesType</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"updatedStates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">UpdatedStateType</span><span class="hljs-punctuation">]</span>
+  <span class="hljs-attr">"exceptionNames"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"inputState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">HashDigest_SHA256</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"outputState"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">HashDigest_SHA256</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"txStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"FAILURE"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
@@ -14215,55 +14401,6 @@ https://9c-main-api.nine-chronicles.com/graphql
               </div>
             </div>
           </section>
-          <section id="definition-UpdatedStateType" class="definition definition-object" data-traverse-target="definition-UpdatedStateType">
-            <div class="definition-group-name">
-              <a href="#group-Types">Types</a>
-            </div>
-            <h2 class="definition-heading">UpdatedStateType</h2>
-            <div class="doc-row">
-              <div class="doc-copy">
-                <div class="definition-properties doc-copy-section">
-                  <h5>Fields</h5>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Field Name</th>
-                        <th>Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>address</code></span> - <span class="property-type"><a href="#definition-Address"><code>Address!</code></a></span>
-                        </td>
-                        <td>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td data-property-name=""><span class="property-name"><code>state</code></span> - <span class="property-type"><a href="#definition-BencodexValue"><code>BencodexValue</code></a></span>
-                        </td>
-                        <td>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="doc-examples">
-                <div class="example-section example-section-is-code">
-                  <h5>Example</h5>
-                  <html>
-                    <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"state"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BencodexValue</span>
-<span class="hljs-punctuation">}</span>
-</code></pre>
-                    </body>
-                  </html>
-                </div>
-              </div>
-            </div>
-          </section>
           <section id="definition-ValidationQuery" class="definition definition-object" data-traverse-target="definition-ValidationQuery">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -14350,7 +14487,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"privateKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"privateKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"publicKey"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -14468,7 +14605,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"blockHash"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"flag"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">VoteFlag</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"height"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"round"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
@@ -14597,7 +14734,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <h5>Example</h5>
                   <html>
                     <head></head>
-                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"bossLevel"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"claimed"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span>
+                    <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"bossLevel"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"claimed"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span>
 </code></pre>
                     </body>
                   </html>
@@ -14699,7 +14836,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"currentHp"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"endedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"level"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"startedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -14794,7 +14931,7 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"isStageCleared"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isStageCleared"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"isWorldUnlocked"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"world"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">WorldType</span>
 <span class="hljs-punctuation">}</span>
@@ -14886,14 +15023,14 @@ https://9c-main-api.nine-chronicles.com/graphql
                   <html>
                     <head></head>
                     <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isStageCleared"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isStageCleared"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"isUnlocked"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stageBegin"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stageClearedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stageClearedId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stageEnd"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stageClearedId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stageEnd"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"unlockedBlockIndex"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
