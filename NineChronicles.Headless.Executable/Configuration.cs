@@ -42,6 +42,7 @@ namespace NineChronicles.Headless.Executable
         public NetworkType NetworkType { get; set; } = NetworkType.Main;
         public string[]? IceServerStrings { get; set; }
         public string[]? PeerStrings { get; set; }
+        public SwarmOptions? SwarmOptions { get; set; }
 
         // RPC Server
         public bool RpcServer { get; set; }
@@ -92,6 +93,14 @@ namespace NineChronicles.Headless.Executable
         public AccessControlServiceOptions? AccessControlService { get; set; }
 
         public int ArenaParticipantsSyncInterval { get; set; } = 1000;
+
+        public void LoadSwarmOptions(JObject libplanet)
+        {
+            if (libplanet["Swarm"] is JObject swarm)
+            {
+                SwarmOptions = swarm.ToObject<SwarmOptions>();
+            }
+        }
 
         public void Overwrite(
             string? appProtocolVersionString,
