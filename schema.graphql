@@ -144,6 +144,13 @@ type ActionQuery {
     """Count to summon. Must between 1 and 10."""
     summonCount: Int!
   ): ByteString!
+  claimItems(
+    """List of pair of avatar address, List<FAV> to claim."""
+    claimData: [ClaimDataInputType!]!
+
+    """Memo to attach to this action."""
+    memo: String
+  ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
     avatarAddress: Address!
@@ -367,6 +374,16 @@ type ActionQuery {
     """The try count to enhance rune"""
     tryCount: Int
   ): ByteString!
+  runeSummon(
+    """Avatar address to get summoned items"""
+    avatarAddress: Address!
+
+    """Summon group id"""
+    groupId: Int!
+
+    """Count to summon. Must between 1 and 10."""
+    summonCount: Int!
+  ): ByteString!
   stake(
     """An amount to stake."""
     amount: BigInt
@@ -375,11 +392,14 @@ type ActionQuery {
     """A string value to be transferred."""
     amount: String!
 
-    """A currency type to be transferred."""
-    currency: CurrencyEnum!
+    """A enum value of currency to be transferred."""
+    currency: CurrencyEnum
 
     """A 80-max length string to note."""
     memo: String
+
+    """A currency to be transferred."""
+    rawCurrency: CurrencyInput
 
     """Address of recipient."""
     recipient: Address!
@@ -442,6 +462,13 @@ type ActionTxQuery {
     """Count to summon. Must between 1 and 10."""
     summonCount: Int!
   ): ByteString!
+  claimItems(
+    """List of pair of avatar address, List<FAV> to claim."""
+    claimData: [ClaimDataInputType!]!
+
+    """Memo to attach to this action."""
+    memo: String
+  ): ByteString!
   claimRaidReward(
     """address of avatar state to receive reward."""
     avatarAddress: Address!
@@ -665,6 +692,16 @@ type ActionTxQuery {
     """The try count to enhance rune"""
     tryCount: Int
   ): ByteString!
+  runeSummon(
+    """Avatar address to get summoned items"""
+    avatarAddress: Address!
+
+    """Summon group id"""
+    groupId: Int!
+
+    """Count to summon. Must between 1 and 10."""
+    summonCount: Int!
+  ): ByteString!
   stake(
     """An amount to stake."""
     amount: BigInt
@@ -673,11 +710,14 @@ type ActionTxQuery {
     """A string value to be transferred."""
     amount: String!
 
-    """A currency type to be transferred."""
-    currency: CurrencyEnum!
+    """A enum value of currency to be transferred."""
+    currency: CurrencyEnum
 
     """A 80-max length string to note."""
     memo: String
+
+    """A currency to be transferred."""
+    rawCurrency: CurrencyInput
 
     """Address of recipient."""
     recipient: Address!
@@ -831,6 +871,35 @@ type ArenaInformationType {
   ticket: Int!
   ticketResetCount: Int!
   win: Int!
+}
+
+type ArenaParticipantType {
+  """Address of avatar."""
+  avatarAddr: Address!
+
+  """Cp of avatar."""
+  cp: Int!
+
+  """Level of avatar."""
+  level: Int!
+
+  """Score for defeat."""
+  loseScore: Int!
+
+  """Name of avatar."""
+  nameWithHash: String!
+
+  """Portrait icon id."""
+  portraitId: Int!
+
+  """Arena rank of avatar."""
+  rank: Int!
+
+  """Arena score of avatar."""
+  score: Int!
+
+  """Score for victory."""
+  winScore: Int!
 }
 
 type ArenaRecordType {
@@ -1024,6 +1093,11 @@ type BoundPeer {
 scalar Byte
 
 scalar ByteString
+
+input ClaimDataInputType {
+  avatarAddress: Address!
+  fungibleAssetValues: [FungibleAssetValueInputType!]!
+}
 
 type CollectionMapType {
   count: Int!
@@ -2130,6 +2204,7 @@ type StateQuery {
     """Round of championship to get arena information"""
     round: Int!
   ): [ArenaInformationType!]!
+  arenaParticipants(avatarAddress: Address!, filterBounds: Boolean! = true): [ArenaParticipantType]!
 
   """State for avatar."""
   avatar(
@@ -2145,6 +2220,7 @@ type StateQuery {
 
   """asset balance by currency."""
   balance(address: Address!, currency: CurrencyInput!): FungibleAssetValueWithCurrencyType!
+  cachedSheet(tableName: String!): String
   crystalMonsterCollectionMultiplierSheet: CrystalMonsterCollectionMultiplierSheetType
 
   """
@@ -2351,6 +2427,10 @@ type TransactionHeadlessQuery {
     """transaction id."""
     txId: TxId!
   ): TxResultType!
+  transactionResults(
+    """transaction ids."""
+    txIds: [TxId]!
+  ): [TxResultType]!
   unsignedTransaction(
     maxGasPrice: FungibleAssetValueInputType = {decimalPlaces: 18, minters: null, quantity: 1000000000000000000, ticker: "Mead"}
 
